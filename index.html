@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>city builder by amit</title>
+    <!-- Tailwind CSS को सीधे CDN से लोड करें -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* सामान्य CSS */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f7f7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .game-container {
+            display: none; /* गेम शुरू होने तक छुपाएँ */
+            flex-direction: column;
+            gap: 20px;
+            max-width: 1200px;
+            width: 100%;
+        }
+        .grid-canvas {
+            border: 4px solid #333;
+            background-color: #a8a29e; /* Soil/Ground color */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 800px;
+            height: auto;
+            aspect-ratio: 1 / 1; 
+        }
+        .sidebar {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1-px rgba(0, 0, 0, 0.06);
+        }
+        .asset-button {
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: transform 0.1s;
+            box-shadow: 0 3px #9ca3af;
+        }
+        .asset-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px #6b7280;
+        }
+        .asset-button:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px #9ca3af;
+        }
+        .active-asset {
+            border: 3px solid #ef4444;
+            box-shadow: 0 0 10px #ef4444;
+        }
+        .status-box {
+            background-color: #f3f4f6;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        .message-box {
+            min-height: 40px;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+        }
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            max-width: 90%;
+            width: 500px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            max-height: 80vh;
+            overflow-y: auto;
+            text-align: center;
+        }
+        .user-id-box {
+            background-color: #e5e7eb;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            word-break: break-all;
+            margin-top: 10px;
+            text-align: center;
+        }
+        .map-card {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            text-align: left;
+            transition: background-color 0.15s;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        .map-card.unlocked {
+            background-color: #e0f2f1; /* Light Teal */
+        }
+        .map-card.locked {
+            background-color: #fce7f3; /* Light Pink */
+            opacity: 0.7;
+            cursor: default;
+        }
+        .map-card.current {
+            border: 3px solid #10b981; /* Green border for active map */
+            background-color: #d1fae5;
+        }
+
+        @media (min-width: 1024px) {
+            .game-container {
+                flex-direction: row;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+<!-- ** 1. लॉगिन मॉडाल ** -->
+<div id="loginModal" class="modal">
+    <div class="modal-content">
+        <h2 class="text-3xl font-bold mb-6 text-indigo-600">city builder:login</h2>
+        
+        <p class="text-sm text-gray-500 mb-4">आपकी प्रगति को सहेजने और लोड करने के लिए एक यूजर ID दर्ज करें।</p>
+        
+        <input type="text" id="loginId" placeholder="यूजर ID (जैसे: shivam-city1)" class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" maxlength="20">
+        
+        <input type="password" id="loginPassword" placeholder="पासवर्ड (कोई भी)" class="w-full p-3 mb-6 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" value="secret" onfocus="this.select()">
+
+        <div id="loginMessage" class="message-box hidden mb-4"></div>
+
+        <button id="loginButton" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white p-3 rounded-lg font-bold transition duration-150 shadow-lg mb-3">
+            मौजूदा यूजर ID से लोड करें
+        </button>
+        
+        <button id="newUserButton" class="w-full bg-green-500 hover:bg-green-600 text-white p-3 rounded-lg font-bold transition duration-150 shadow-lg">
+            नया यूजर बनाएँ और खेलें
+        </button>
+    </div>
+</div>
+
+
+<!-- ** 2. मुख्य गेम कंटेनर ** -->
+<div class="game-container" id="mainGameContainer">
+    <!-- बायाँ साइडबार: नियंत्रण और आँकड़े -->
+    <div class="sidebar lg:w-1/3">
+        <h1 class="text-2xl font-bold mb-4 text-center text-gray-800">मेरा शहर</h1>
+        
+        <!-- यूजर आईडी डिस्प्ले -->
+        <p class="text-xs font-medium text-gray-500 text-center mb-2">सक्रिय यूजर ID (प्रगति सेव्ड):</p>
+        <div id="userIdDisplay" class="user-id-box bg-indigo-100 text-indigo-700 font-bold mb-6"></div>
+
+        <!-- मैप/लेवल डिस्प्ले और कंट्रोल -->
+        <div class="mb-6 border-b pb-4">
+            <h2 class="text-xl font-semibold mb-3 text-gray-700 flex justify-between items-center">
+                वर्तमान मैप/लेवल
+            </h2>
+            <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg border">
+                <span class="text-lg font-bold text-blue-600">मैप <span id="currentMapDisplay">1</span> / 20</span>
+                <button id="openMapSelectModalButton" class="bg-purple-500 hover:bg-purple-600 text-white text-sm p-2 rounded-lg transition duration-150">
+                    मैप बदलें
+                </button>
+            </div>
+        </div>
+
+        <!-- आँकड़े (Metrics) -->
+        <div class="mb-6">
+            <h2 class="text-xl font-semibold mb-3 text-gray-700">शहर के आँकड़े</h2>
+            <div id="metrics" class="space-y-3">
+                <div class="status-box">
+                    <p class="text-gray-900"><strong class="text-green-600">money:</strong> <span id="money_val">0</span> ₹</p>
+                    <p class="text-gray-900"><strong class="text-blue-600">population:</strong> <span id="pop_val">0</span></p>
+                    <p class="text-gray-900"><strong class="text-yellow-600">electricity:</strong> <span id="power_val">0</span> / <span id="power_cap_val">0</span> (शेष: <span id="power_bal_val">0</span>)</p>
+                    <p class="text-gray-900"><strong class="text-cyan-600">water:</strong> <span id="water_val">0</span> / <span id="water_cap_val">0</span> (balance: <span id="water_bal_val">0</span>)</p>
+                    <p class="text-gray-900"><strong class="text-pink-600">happy:</strong> <span id="happiness_val">0</span>%</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- निर्माण नियंत्रण (Building Controls) -->
+        <div class="mb-6">
+            <h2 class="text-xl font-semibold mb-3 text-gray-700">construction</h2>
+            <div id="controls" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <!-- बटन यहाँ JS द्वारा जोड़े जाएंगे -->
+            </div>
+        </div>
+        
+        <!-- संदेश बॉक्स (Message Box) -->
+        <div id="message" class="message-box bg-red-100 text-red-700 hidden"></div>
+        
+        <!-- गेम एक्शन (Game Actions) -->
+        <div>
+            <h2 class="text-xl font-semibold mb-3 text-gray-700">control</h2>
+            <div class="space-y-3">
+                <!-- 'निर्देश' बटन -->
+                <button id="instructionsButton" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white p-3 rounded-lg font-bold transition duration-150 transform hover:scale-[1.01] shadow-md">
+                    नियम (कैसे खेलें)
+                </button>
+                <!-- 'समझो' बटन -->
+                <button id="samjhoButton" class="w-full bg-green-500 hover:bg-green-600 text-white p-3 rounded-lg font-bold transition duration-150 transform hover:scale-[1.01] shadow-md">
+                    समझो (आसान करें)
+                </button>
+                <!-- अगली बारी बटन -->
+                <button id="endTurnButton" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white p-3 rounded-lg font-bold transition duration-150 transform hover:scale-[1.01] shadow-md">
+                   nextweek (Turn <span id="turn_val">1</span>)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- दायाँ ग्रिड (Grid Canvas) -->
+    <div class="lg:w-2/3 flex justify-center items-center">
+        <canvas id="cityCanvas" class="grid-canvas"></canvas>
+    </div>
+</div>
+
+<!-- ** 3. मैप चयन मॉडाल (Map Select Modal) ** -->
+<div id="mapSelectModal" class="modal hidden">
+    <div class="modal-content">
+        <h2 class="text-2xl font-bold mb-4 text-gray-800 border-b pb-2">select map / unlock map</h2>
+        <p class="text-sm text-gray-600 mb-4">आप वर्तमान में मैप <span id="modalCurrentMapDisplay">1</span> पर हैं।</p>
+        
+        <div id="mapListContainer" class="max-h-80 overflow-y-auto pr-2">
+            <!-- मैप कार्ड यहाँ JS द्वारा जोड़े जाएंगे -->
+        </div>
+
+        <button onclick="closeMapSelectModal()" class="mt-6 bg-red-500 hover:bg-red-600 text-white p-3 rounded-lg font-bold transition duration-150">बंद करें</button>
+    </div>
+</div>
+
+<!-- ** 4. निर्देश मॉडाल (Instructions Modal) ** -->
+<div id="instructionsModal" class="modal hidden">
+    <div class="modal-content">
+        <span class="close-button" onclick="closeInstructionsModal()">&times;</span>
+        <h2 class="text-2xl font-bold mb-4 text-gray-800 border-b pb-2">खेलने के निर्देश</h2>
+        <div class="text-gray-700 space-y-4 text-sm text-left">
+            <p><strong>लक्ष्य:</strong> एक सफल, खुशहाल और आर्थिक रूप से स्थिर शहर का निर्माण करना है।</p>
+            
+            <h3 class="font-bold text-lg text-indigo-600">1. मैप अनलॉक (Map Unlock):</h3>
+            <p class="ml-4">कुल 20 मैप्स हैं। अगले मैप को अनलॉक करने के लिए, आपके पास आवश्यक **पैसे (Money)** होने चाहिए। 'मैप बदलें' बटन पर क्लिक करके अनलॉक करें।</p>
+            
+            <h3 class="font-bold text-lg text-indigo-600">2. निर्माण (Building):</h3>
+            <ul class="list-disc list-inside space-y-1 ml-4">
+                <li>साइडबार से कोई भी एसेट (जैसे 'घर', 'बिजलीघर') चुनें।</li>
+                <li>ग्रिड पर क्लिक करें जहाँ आप उसे बनाना चाहते हैं।</li>
+            </ul>
+        </div>
+        <button onclick="closeInstructionsModal()" class="mt-6 bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-lg font-bold transition duration-150">बंद करें</button>
+    </div>
+</div>
+
+
+<script type="module">
+    // ** Firebase Imports **
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // ** ग्लोबल वैरिएबल्स **
+    setLogLevel('Debug'); 
+    
+    const LOCAL_STORAGE_KEY = 'cityBuilderSave_';
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+    let app, db, auth;
+    let isAuthReady = false;
+    let isGameActive = false;
+    let isCloudSavingEnabled = false; 
+    let customGameId = null; 
+    let previewActive = false;
+    
+    // ** गेम सेटअप **
+    const CANVAS_SIZE = 800;
+    const GRID_SIZE = 20;
+    const TILE_SIZE = CANVAS_SIZE / GRID_SIZE;
+    const TOTAL_MAPS = 20;
+
+    const canvas = document.getElementById('cityCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = CANVAS_SIZE;
+    canvas.height = CANVAS_SIZE;
+
+    // मैप अनलॉक लागत - यह वह राशि है जो आपको अगले मैप को अनलॉक करने के लिए चाहिए
+    // Map 1: ₹0 (default), Map 2: ₹5,000, Map 3: ₹10,000, Map 20: ₹95,000
+    const MAP_UNLOCK_COSTS = Array.from({ length: TOTAL_MAPS }, (_, i) => i * 5000); 
+
+    // ** एसेट परिभाषाएँ (Asset Definitions) ** (पिछली फ़ाइल के समान)
+    const ASSET_TYPES = {
+        HOUSE: {
+            name: 'घर', cost: 100, size: 1, power: -2, water: -2, pop: 10, revenue: 5, happiness: 1,
+            color: '#fef08a', text: 'Ghar'
+        },
+        POWER_PLANT: {
+            name: 'बिजलीघर', cost: 500, size: 2, power: 50, water: -10, pop: 0, revenue: 0, happiness: -5,
+            color: '#34d399', text: 'Power'
+        },
+        WATER_TOWER: {
+            name: 'पानी की टंकी', cost: 300, size: 1, power: 0, water: 30, pop: 0, revenue: 0, happiness: 0,
+            color: '#93c5fd', text: 'Water'
+        },
+        ROAD: {
+            name: 'सड़क', cost: 20, size: 1, power: 0, water: 0, pop: 0, revenue: 0, happiness: 0,
+            color: '#4b5563', text: ''
+        },
+        SCHOOL: {
+            name: 'स्कूल', cost: 500, size: 2, power: -10, water: -10, pop: 0, revenue: -10, happiness: 15,
+            color: '#f97316', text: 'School'
+        },
+        FACTORY: {
+            name: 'फैक्ट्री', cost: 2000, size: 3, power: -50, water: -50, pop: 0, revenue: 80, happiness: -30,
+            color: '#71717a', text: 'Factory'
+        },
+        HOSPITAL: {
+            name: 'अस्पताल', cost: 7500, size: 3, power: -50, water: -50, pop: 0, revenue: -75, happiness: 80,
+            color: '#f87171', text: 'Hospital' 
+        },
+        MALL: {
+            name: 'शॉपिंग मॉल', cost: 10000, size: 4, power: -60, water: -60, pop: 0, revenue: 250, happiness: 60,
+            color: '#c026d3', text: 'Mall'
+        },
+        PARLIAMENT: {
+            name: 'संसद भवन', cost: 15000, size: 4, power: -40, water: -40, pop: 0, revenue: -100, happiness: 100,
+            color: '#94a3b8', text: 'Sansad' 
+        }
+    };
+
+    // ** डिफ़ॉल्ट गेम स्टेट **
+    const DEFAULT_STATE = {
+        money: 15000, 
+        turn: 1,
+        population: 0,
+        powerCapacity: 0,
+        powerDemand: 0,
+        waterCapacity: 0,
+        waterDemand: 0,
+        totalHappiness: 50,
+        currentAsset: null,
+        message: '',
+        messageTimer: null,
+        lastMouseX: 0,
+        lastMouseY: 0,
+        // *** मल्टी-मैप वेरिएबल ***
+        currentMapIndex: 0, // 0-19
+        unlockedMaps: 1, // मैप्स की संख्या जो अनलॉक हो चुके हैं (1-20)
+    };
+
+    // एक ग्रिड बनाने के लिए हेल्पर फ़ंक्शन
+    const createEmptyGrid = () => Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null));
+
+    // सभी 20 मैप्स का ऐरे
+    let allGrids = Array.from({ length: TOTAL_MAPS }, createEmptyGrid);
+    
+    let gameState = { ...DEFAULT_STATE };
+
+    // ** वर्तमान ग्रिड तक पहुँचने के लिए हेल्पर **
+    function getCurrentGrid() {
+        return allGrids[gameState.currentMapIndex];
+    }
+
+
+    // ** Firebase और प्रोग्रेस फ़ंक्शन्स **
+    
+    function getGameSaveDocRef(userId) {
+        return doc(db, 
+            'artifacts', 
+            appId, 
+            'public', 
+            'data', 
+            'game_saves', 
+            userId        
+        );
+    }
+    
+    /**
+     * Firebase को आरंभ करता है और यूजर को प्रमाणित करता है।
+     */
+    async function initFirebase() {
+        if (!firebaseConfig) {
+             console.warn("Firebase config उपलब्ध नहीं है। केवल लोकल स्टोरेज सेविंग का उपयोग किया जाएगा।");
+             isAuthReady = true;
+             isCloudSavingEnabled = false;
+             showLoginModalMessage('क्लाउड सेविंग उपलब्ध नहीं है। प्रगति केवल आपके ब्राउज़र में सेव की जाएगी।', 'bg-yellow-100 text-yellow-700');
+             document.getElementById('loginButton').disabled = false;
+             document.getElementById('newUserButton').disabled = false;
+             return;
+        }
+        
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+            
+            if (initialAuthToken) {
+                await signInWithCustomToken(auth, initialAuthToken);
+            } else {
+                await signInAnonymously(auth);
+            }
+
+            onAuthStateChanged(auth, (user) => {
+                isAuthReady = true;
+                if (user) {
+                    console.log("Firebase Auth Sign-in सफल। क्लाउड सेविंग सक्रिय।");
+                    isCloudSavingEnabled = true;
+                } else {
+                     console.warn("Firebase Auth Sign-in असफल रहा। क्लाउड सेविंग अक्षम।");
+                     isCloudSavingEnabled = false;
+                }
+                
+                showLoginModalMessage('कृपया अपना यूजर ID दर्ज करें या नया यूजर बनाएँ।', 'bg-blue-100 text-blue-700');
+                document.getElementById('loginButton').disabled = false;
+                document.getElementById('newUserButton').disabled = false;
+            });
+
+        } catch (error) {
+            console.error("Firebase Initialization या Sign-In में त्रुटि:", error);
+            isAuthReady = true;
+            isCloudSavingEnabled = false;
+            showLoginModalMessage('क्लाउड सेविंग में त्रुटि। प्रगति केवल लोकल स्टोरेज में सेव की जाएगी।', 'bg-red-100 text-red-700');
+            document.getElementById('loginButton').disabled = false;
+            document.getElementById('newUserButton').disabled = false;
+        }
+    }
+
+    /**
+     * वर्तमान गेम स्टेट को क्लाउड या लोकल स्टोरेज में सेव करता है।
+     */
+    async function saveGame() {
+        if (!customGameId) {
+            console.warn("customGameId सेट नहीं है, सेव नहीं किया जा सकता।");
+            return;
+        }
+        
+        // सभी ग्रिड्स को JSON स्ट्रिंग में बदलें (मल्टी-मैप सपोर्ट के लिए)
+        const allGridsString = JSON.stringify(allGrids);
+
+        const dataToSave = {
+            money: gameState.money,
+            turn: gameState.turn,
+            population: gameState.population,
+            powerCapacity: gameState.powerCapacity,
+            powerDemand: gameState.powerDemand,
+            waterCapacity: gameState.waterCapacity,
+            waterDemand: gameState.waterDemand,
+            totalHappiness: gameState.totalHappiness,
+            currentMapIndex: gameState.currentMapIndex, // नया
+            unlockedMaps: gameState.unlockedMaps, // नया
+            allGrids: allGridsString, // बदला हुआ
+            lastSaved: new Date().toISOString()
+        };
+        
+        if (isCloudSavingEnabled) {
+            try {
+                const docRef = getGameSaveDocRef(customGameId);
+                await setDoc(docRef, dataToSave, { merge: false });
+                console.log(`गेम सफलतापूर्वक क्लाउड में सेव हो गया! ID: ${customGameId}`);
+            } catch (error) {
+                console.error("गेम क्लाउड में सेव करने में त्रुटि। लोकल सेविंग का प्रयास:", error);
+                localStorage.setItem(LOCAL_STORAGE_KEY + customGameId, JSON.stringify(dataToSave));
+                showMessage(`क्लाउड सेविंग विफल। गेम लोकल स्टोरेज में सेव हुआ।`, 'bg-yellow-100 text-yellow-700');
+            }
+        } else {
+            localStorage.setItem(LOCAL_STORAGE_KEY + customGameId, JSON.stringify(dataToSave));
+            console.log(`गेम सफलतापूर्वक लोकल स्टोरेज में सेव हो गया! ID: ${customGameId}`);
+        }
+    }
+
+    /**
+     * पिछली सेव की गई गेम स्टेट को क्लाउड या लोकल स्टोरेज से लोड करता है।
+     */
+    async function loadGame(userId) {
+        if (!userId) return false;
+        
+        let savedData = null;
+        
+        if (isCloudSavingEnabled) {
+            try {
+                const docRef = getGameSaveDocRef(userId);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    savedData = docSnap.data();
+                    showMessage(`✅ यूजर ID "${customGameId}" के लिए प्रगति क्लाउड से लोड हो गई।`, 'bg-green-100 text-green-700');
+                }
+            } catch (error) {
+                console.warn("क्लाउड लोड करने में त्रुटि, लोकल स्टोरेज का प्रयास:", error);
+            }
+        }
+
+        if (!savedData) {
+            const localData = localStorage.getItem(LOCAL_STORAGE_KEY + userId);
+            if (localData) {
+                savedData = JSON.parse(localData);
+                showMessage(`✅ यूजर ID "${customGameId}" के लिए प्रगति लोकल स्टोरेज से लोड हो गई।`, 'bg-green-100 text-green-700');
+            }
+        }
+        
+        if (savedData) {
+            Object.assign(gameState, {
+                money: savedData.money || DEFAULT_STATE.money,
+                turn: savedData.turn || DEFAULT_STATE.turn,
+                population: savedData.population || DEFAULT_STATE.population,
+                powerCapacity: savedData.powerCapacity || DEFAULT_STATE.powerCapacity,
+                powerDemand: savedData.powerDemand || DEFAULT_STATE.powerDemand,
+                waterCapacity: savedData.waterCapacity || DEFAULT_STATE.waterCapacity,
+                waterDemand: savedData.waterDemand || DEFAULT_STATE.waterDemand,
+                totalHappiness: savedData.totalHappiness || DEFAULT_STATE.totalHappiness,
+                currentMapIndex: savedData.currentMapIndex || DEFAULT_STATE.currentMapIndex, // नया
+                unlockedMaps: savedData.unlockedMaps || DEFAULT_STATE.unlockedMaps // नया
+            });
+
+            try {
+                // सभी 20 ग्रिड्स को लोड करें
+                 const loadedGrids = JSON.parse(savedData.allGrids);
+                 if (Array.isArray(loadedGrids) && loadedGrids.length === TOTAL_MAPS) {
+                    allGrids = loadedGrids;
+                 } else {
+                    console.error("लोड किया गया ग्रिड डेटा अमान्य है। नया ग्रिड बनाया जा रहा है।");
+                    allGrids = Array.from({ length: TOTAL_MAPS }, createEmptyGrid);
+                 }
+            } catch (e) {
+                 console.error("ग्रिड JSON पार्स करने में त्रुटि", e);
+                 allGrids = Array.from({ length: TOTAL_MAPS }, createEmptyGrid);
+            }
+            
+            updateMetrics();
+            drawGrid(); // ऑप्टिमाइज़ेशन: केवल लोड होने पर एक बार ग्रिड खींचें
+            updateMapDisplay(); // नया: मैप UI अपडेट करें
+            return true;
+        } 
+        
+        return false; 
+    }
+    
+    // ** मैप चेंजिंग लॉजिक **
+    function updateMapDisplay() {
+        document.getElementById('currentMapDisplay').textContent = gameState.currentMapIndex + 1;
+        document.getElementById('modalCurrentMapDisplay').textContent = gameState.currentMapIndex + 1;
+    }
+
+    function openMapSelectModal() {
+        renderMapList();
+        document.getElementById('mapSelectModal').classList.remove('hidden');
+    }
+
+    function closeMapSelectModal() {
+        document.getElementById('mapSelectModal').classList.add('hidden');
+    }
+
+    function renderMapList() {
+        const container = document.getElementById('mapListContainer');
+        container.innerHTML = '';
+
+        for (let i = 0; i < TOTAL_MAPS; i++) {
+            const mapNumber = i + 1;
+            const cost = MAP_UNLOCK_COSTS[i];
+            const isUnlocked = i < gameState.unlockedMaps;
+            const isCurrent = i === gameState.currentMapIndex;
+
+            const card = document.createElement('div');
+            card.className = `map-card flex justify-between items-center transition duration-150 ${isCurrent ? 'current' : ''} ${isUnlocked ? 'unlocked hover:bg-teal-200' : 'locked'}`;
+
+            const statusText = isCurrent ? 
+                `<span class="text-green-700 font-bold">वर्तमान मैप</span>` :
+                isUnlocked ? 
+                    `<button class="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg text-sm" onclick="changeMap(${i})">सक्रिय करें</button>` :
+                    `<button class="bg-pink-500 hover:bg-pink-600 text-white p-2 rounded-lg text-sm" ${gameState.money >= cost ? '' : 'disabled'} onclick="unlockMap(${i})">
+                        अनलॉक करें (₹${cost.toLocaleString('en-IN')})
+                    </button>`;
+            
+            card.innerHTML = `
+                <div>
+                    <h4 class="text-xl font-bold text-gray-800">मैप ${mapNumber}</h4>
+                    <p class="text-sm text-gray-600">${isUnlocked ? 'निर्मित' : 'बंद है'} | अनलॉक लागत: ₹${cost.toLocaleString('en-IN')}</p>
+                </div>
+                ${statusText}
+            `;
+            container.appendChild(card);
+        }
+    }
+
+    async function changeMap(newIndex) {
+        if (newIndex < 0 || newIndex >= TOTAL_MAPS || newIndex >= gameState.unlockedMaps) {
+            showMessage('यह मैप अभी अनलॉक नहीं हुआ है।', 'bg-red-100 text-red-700');
+            return;
+        }
+        
+        // 1. वर्तमान प्रगति सेव करें (ज़रूरी)
+        updateMetrics(); 
+
+        // 2. मैप बदलें
+        gameState.currentMapIndex = newIndex;
+        
+        // 3. नया ग्रिड लोड करें और UI अपडेट करें
+        updateMetrics(); 
+        drawGrid();
+        updateMapDisplay();
+        closeMapSelectModal();
+        await saveGame();
+        showMessage(`✅ मैप ${newIndex + 1} पर स्विच किया गया!`, 'bg-green-100 text-green-700');
+    }
+
+    async function unlockMap(mapIndexToUnlock) {
+        if (mapIndexToUnlock !== gameState.unlockedMaps) {
+            showMessage('आपको क्रमानुसार मैप अनलॉक करने होंगे।', 'bg-red-100 text-red-700');
+            return;
+        }
+
+        const cost = MAP_UNLOCK_COSTS[mapIndexToUnlock];
+        if (gameState.money < cost) {
+            showMessage(`❌ मैप ${mapIndexToUnlock + 1} को अनलॉक करने के लिए आपको ₹${cost.toLocaleString('en-IN')} चाहिए।`, 'bg-red-100 text-red-700');
+            return;
+        }
+
+        gameState.money -= cost;
+        gameState.unlockedMaps++;
+        
+        // नया मैप तुरंत सक्रिय करें
+        await changeMap(mapIndexToUnlock); 
+        
+        showMessage(`🎉 मैप ${mapIndexToUnlock + 1} सफलतापूर्वक अनलॉक और सक्रिय हो गया!`, 'bg-green-100 text-green-700');
+        renderMapList(); // मॉडाल UI को अपडेट करें
+        await saveGame();
+    }
+
+
+    // ** अन्य गेम लॉजिक फ़ंक्शन्स **
+
+    function checkCanPlace(startX, startY, size) {
+        const currentGrid = getCurrentGrid();
+        if (startX < 0 || startY < 0 || startX + size > GRID_SIZE || startY + size > GRID_SIZE) {
+            return false;
+        }
+
+        for (let x = startX; x < startX + size; x++) {
+            for (let y = startY; y < startY + size; y++) {
+                if (currentGrid[x][y] !== null) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    async function placeAsset(startX, startY, assetType) {
+        const currentGrid = getCurrentGrid();
+        const size = assetType.size;
+        
+        const mainAsset = { type: assetType.name, x: startX, y: startY, assetKey: assetType.name, size: size };
+
+        currentGrid[startX][startY] = mainAsset;
+        
+        for (let x = startX; x < startX + size; x++) {
+            for (let y = startY; y < startY + size; y++) {
+                if (x === startX && y === startY) continue; 
+
+                currentGrid[x][y] = { type: 'BLOCKED', parentX: startX, parentY: startY };
+            }
+        }
+
+        gameState.money -= assetType.cost;
+        showMessage(`${assetType.name} का निर्माण सफल!`, 'bg-green-100 text-green-700');
+        updateMetrics();
+        drawGrid(); 
+        await saveGame();
+    }
+
+    // ** ड्राइंग फ़ंक्शन्स (Drawing Functions) **
+
+    function drawGrid() {
+        const currentGrid = getCurrentGrid();
+        ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+
+        for (let x = 0; x < GRID_SIZE; x++) {
+            for (let y = 0; y < GRID_SIZE; y++) {
+                const tile = currentGrid[x][y];
+                const screenX = x * TILE_SIZE;
+                const screenY = y * TILE_SIZE;
+
+                // ग्रिड लाइनें
+                ctx.strokeStyle = '#3f3f46';
+                ctx.strokeRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
+
+                if (tile) {
+                    if (tile.type === 'BLOCKED') {
+                        ctx.fillStyle = '#6b728010'; 
+                        ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
+                    } else {
+                        const assetType = Object.values(ASSET_TYPES).find(a => a.name === tile.type);
+                        
+                        if (assetType && tile.x === x && tile.y === y) {
+                             drawAsset(screenX, screenY, assetType, tile.size);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    function drawAsset(x, y, assetType, size) {
+        const drawSize = TILE_SIZE * size;
+        
+        ctx.fillStyle = assetType.color;
+        ctx.fillRect(x + 1, y + 1, drawSize - 2, drawSize - 2); 
+
+        // टेक्स्ट/लेबल
+        ctx.fillStyle = (['#c026d3', '#f87171', '#94a3b8', '#71717a'].includes(assetType.color)) ? '#ffffff' : '#1f2937';
+        ctx.font = `${Math.floor(drawSize / 6)}px Inter`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(assetType.text, x + drawSize / 2, y + drawSize / 2);
+    }
+
+    function drawPreview(mouseX, mouseY) {
+        if (!isGameActive || !gameState.currentAsset || gameState.currentAsset === 'DELETE') return;
+        
+        if (previewActive) {
+            drawGrid(); 
+        }
+        
+        const x = Math.floor(mouseX / TILE_SIZE);
+        const y = Math.floor(mouseY / TILE_SIZE);
+
+        if (x < 0 || y < 0 || x >= GRID_SIZE || y >= GRID_SIZE) return;
+
+        const assetType = ASSET_TYPES[gameState.currentAsset];
+        if (!assetType) return;
+
+        const canPlace = checkCanPlace(x, y, assetType.size);
+        const color = canPlace && gameState.money >= assetType.cost ? 'rgba(0, 255, 0, 0.5)' : 'rgba(255, 0, 0, 0.5)';
+        
+        ctx.fillStyle = color;
+        ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE * assetType.size, TILE_SIZE * assetType.size);
+        previewActive = true;
+    }
+    
+    // ** मेट्रिक्स और टर्न लॉजिक (Metrics & Turn Logic) **
+
+    function updateMetrics() {
+        const currentGrid = getCurrentGrid();
+        let pop = 0;
+        let pCap = 0, pDem = 0;
+        let wCap = 0, wDem = 0;
+        let rev = 0;
+        let happySum = 0;
+        
+        for (let x = 0; x < GRID_SIZE; x++) {
+            for (let y = 0; y < GRID_SIZE; y++) {
+                const tile = currentGrid[x][y];
+                if (tile && tile.type !== 'BLOCKED') {
+                    const assetType = Object.values(ASSET_TYPES).find(a => a.name === tile.type);
+                    if (assetType) {
+                        pop += assetType.pop || 0;
+                        rev += assetType.revenue || 0;
+                        
+                        if (assetType.power < 0) pDem += Math.abs(assetType.power); else pCap += assetType.power;
+                        if (assetType.water < 0) wDem += Math.abs(assetType.water); else wCap += assetType.water;
+
+                        happySum += assetType.happiness || 0;
+                    }
+                }
+            }
+        }
+        
+        gameState.population = pop;
+        gameState.powerCapacity = pCap;
+        gameState.powerDemand = pDem;
+        gameState.waterCapacity = wCap;
+        gameState.waterDemand = wDem;
+        
+        let baseHappiness = 50; 
+        gameState.totalHappiness = Math.max(0, Math.min(100, Math.round(baseHappiness + happySum * 0.5)));
+
+        // यूआई अपडेट
+        document.getElementById('money_val').textContent = gameState.money.toFixed(0);
+        document.getElementById('pop_val').textContent = gameState.population;
+        document.getElementById('power_val').textContent = gameState.powerDemand;
+        document.getElementById('power_cap_val').textContent = gameState.powerCapacity;
+        document.getElementById('power_bal_val').textContent = (pCap - pDem).toFixed(0);
+        document.getElementById('water_val').textContent = gameState.waterDemand;
+        document.getElementById('water_cap_val').textContent = gameState.waterCapacity;
+        document.getElementById('water_bal_val').textContent = (wCap - wDem).toFixed(0);
+        document.getElementById('happiness_val').textContent = gameState.totalHappiness;
+        document.getElementById('turn_val').textContent = gameState.turn;
+        
+        updateMapDisplay(); // मैप इंडेक्स को अपडेट करें
+    }
+
+    async function endTurn() {
+        if (!customGameId) {
+            showMessage('पहले लॉगिन करें या नया यूजर बनाएँ।', 'bg-red-100 text-red-700');
+            return;
+        }
+
+        let moneyChange = 0;
+        let happyChange = 0;
+        
+        // 1. राजस्व (Revenue)
+        const revenuePerPerson = 1; 
+        moneyChange += gameState.population * revenuePerPerson;
+
+        // 2. बिजली और पानी का प्रभाव/दंड
+        if (gameState.powerCapacity < gameState.powerDemand) {
+            happyChange -= 15;
+            showMessage('बिजली की भारी कमी! शहर के लोग नाखुश हैं।', 'bg-red-100 text-red-700');
+        }
+        if (gameState.waterCapacity < gameState.waterDemand) {
+            happyChange -= 15;
+            showMessage('पानी की भारी कमी! शहर के लोग नाखुश हैं।', 'bg-red-100 text-red-700');
+        }
+
+        // 3. खुशी (Happiness) का प्रभाव
+        if (gameState.totalHappiness < 30) {
+            moneyChange *= 0.5; 
+            showMessage('खुशी कम है, राजस्व में भारी गिरावट।', 'bg-red-100 text-red-700');
+        } else if (gameState.totalHappiness > 80) {
+            moneyChange *= 1.25; 
+        }
+
+        // 4. बड़े एसेट्स का आवर्ती खर्च (Recurring Expense)
+        let expense = 0;
+        const currentGrid = getCurrentGrid();
+        for (const key in ASSET_TYPES) {
+            const asset = ASSET_TYPES[key];
+            if (asset.revenue < 0) {
+                let count = 0;
+                for (let x = 0; x < GRID_SIZE; x++) {
+                    for (let y = 0; y < GRID_SIZE; y++) {
+                        if (currentGrid[x][y] && currentGrid[x][y].type === asset.name) {
+                            count++;
+                        }
+                    }
+                }
+                expense += count * Math.abs(asset.revenue);
+            }
+        }
+        moneyChange -= expense;
+
+        // 5. स्टेट अपडेट करें
+        gameState.money += moneyChange;
+        
+        gameState.totalHappiness = Math.max(0, Math.min(100, gameState.totalHappiness + happyChange));
+        
+        // 6. जनसंख्या वृद्धि
+        if (gameState.totalHappiness > 70) {
+            gameState.population *= 1.05; 
+            gameState.population = Math.floor(gameState.population);
+        } else if (gameState.totalHappiness < 30 && gameState.population > 0) {
+            gameState.population *= 0.9; 
+            gameState.population = Math.floor(gameState.population);
+        }
+
+        gameState.turn++;
+
+        updateMetrics(); 
+        drawGrid(); 
+        
+        if (!gameState.message.includes("बिजली") && !gameState.message.includes("पानी")) {
+             showMessage(`बारी समाप्त। कुल आय: ${moneyChange.toFixed(0)} ₹`, 'bg-blue-100 text-blue-700');
+        }
+
+        await saveGame();
+    }
+    
+    async function samjho() {
+        if (!customGameId) {
+            showMessage('पहले लॉगिन करें या नया यूजर बनाएँ।', 'bg-red-100 text-red-700');
+            return;
+        }
+        const cashBoost = 15000;
+        gameState.money += cashBoost;
+        
+        const happinessBoost = 25;
+        gameState.totalHappiness = Math.min(100, gameState.totalHappiness + happinessBoost); 
+        
+        showMessage(`✅ आपको ₹${cashBoost} का सरकारी अनुदान मिला और शहर की खुशी में ${happinessBoost} अंकों का उछाल आया!`, 'bg-green-100 text-green-700');
+        updateMetrics();
+        await saveGame(); 
+    }
+
+    // ** मॉडाल फ़ंक्शन्स (Login/Instructions/Map) **
+    
+    // (Login/NewUser, showLoginModalMessage, hideLoginModal functions are kept the same)
+    function showLoginModalMessage(text, className) {
+        const msgBox = document.getElementById('loginMessage');
+        msgBox.textContent = text;
+        msgBox.className = `message-box ${className} mb-4`;
+        msgBox.style.display = 'block';
+    }
+
+    function hideLoginModal() {
+        document.getElementById('loginModal').style.display = 'none';
+        document.getElementById('mainGameContainer').style.display = 'flex';
+        isGameActive = true;
+        drawGrid(); 
+    }
+
+    async function handleLogin() {
+        if (!isAuthReady) {
+            showLoginModalMessage('सिस्टम लोड हो रहा है, कृपया प्रतीक्षा करें।', 'bg-yellow-100 text-yellow-700');
+            return;
+        }
+        const inputId = document.getElementById('loginId').value.trim();
+        const inputPwd = document.getElementById('loginPassword').value.trim(); // PWD for simulation
+        
+        if (!inputId || inputId.length < 3) {
+            showLoginModalMessage('यूजर ID कम से कम 3 वर्णों का होना चाहिए।', 'bg-red-100 text-red-700');
+            return;
+        }
+        
+        customGameId = inputId;
+        document.getElementById('userIdDisplay').textContent = `${customGameId} (${isCloudSavingEnabled ? 'क्लाउड' : 'लोकल'})`;
+
+        showLoginModalMessage('प्रगति लोड हो रही है...', 'bg-blue-100 text-blue-700');
+        const loaded = await loadGame(customGameId);
+        
+        if (loaded) {
+            hideLoginModal();
+        } else {
+            showLoginModalMessage('इस ID के लिए कोई सेव प्रगति नहीं मिली। नया गेम शुरू करने के लिए "नया यूजर बनाएँ" पर क्लिक करें।', 'bg-red-100 text-red-700');
+            customGameId = null; 
+        }
+    }
+
+    async function handleNewUser() {
+        if (!isAuthReady) {
+            showLoginModalMessage('सिस्टम लोड हो रहा है, कृपया प्रतीक्षा करें।', 'bg-yellow-100 text-yellow-700');
+            return;
+        }
+        
+        const inputId = document.getElementById('loginId').value.trim();
+        
+        if (!inputId || inputId.length < 3) {
+            showLoginModalMessage('नया यूजर ID कम से कम 3 वर्णों का होना चाहिए।', 'bg-red-100 text-red-700');
+            return;
+        }
+        
+        let isExisting = false;
+        if (isCloudSavingEnabled) {
+            const checkDocSnap = await getDoc(getGameSaveDocRef(inputId));
+            isExisting = checkDocSnap.exists();
+        } else {
+             isExisting = !!localStorage.getItem(LOCAL_STORAGE_KEY + inputId);
+        }
+
+        if (isExisting) {
+            showLoginModalMessage('❌ यह यूजर ID पहले से मौजूद है। कृपया दूसरा चुनें या लॉगिन करें।', 'bg-red-100 text-red-700');
+            return;
+        }
+
+        customGameId = inputId;
+        document.getElementById('userIdDisplay').textContent = `${customGameId} (${isCloudSavingEnabled ? 'क्लाउड' : 'लोकल'})`;
+        allGrids = Array.from({ length: TOTAL_MAPS }, createEmptyGrid); // सभी मैप्स को रीसेट करें
+        gameState = { ...DEFAULT_STATE };
+        updateMetrics();
+        
+        await saveGame();
+        showLoginModalMessage(`✅ नया यूजर ID "${customGameId}" बन गया। नया गेम शुरू!`, 'bg-green-100 text-green-700');
+        hideLoginModal();
+    }
+    
+    function openInstructionsModal() {
+        document.getElementById('instructionsModal').classList.remove('hidden');
+    }
+
+    function closeInstructionsModal() {
+        document.getElementById('instructionsModal').classList.add('hidden');
+    }
+
+
+    // ** इवेंट हैंडलर्स (Event Handlers) **
+
+    function setupControls() {
+        const controlsDiv = document.getElementById('controls');
+        controlsDiv.innerHTML = '';
+        
+        Object.keys(ASSET_TYPES).forEach(key => {
+            const asset = ASSET_TYPES[key];
+            const button = document.createElement('button');
+            button.className = `asset-button bg-gray-200 hover:bg-gray-300 text-gray-800`;
+            button.id = `btn_${key}`;
+            button.innerHTML = `
+                ${asset.name} <br>
+                <span class="text-xs font-normal">₹${asset.cost} | ${asset.size}x${asset.size}</span>
+            `;
+            button.onclick = () => selectAsset(key);
+            controlsDiv.appendChild(button);
+        });
+
+        const deleteButton = document.createElement('button');
+        deleteButton.className = `asset-button bg-red-400 hover:bg-red-500 text-white`;
+        deleteButton.innerHTML = `हटाओ (X)`;
+        deleteButton.onclick = () => selectAsset('DELETE');
+        controlsDiv.appendChild(deleteButton);
+    }
+
+    function selectAsset(assetKey) {
+        if (!isGameActive) return;
+        
+        if (gameState.currentAsset) {
+            const prevButton = document.getElementById(`btn_${gameState.currentAsset}`);
+            if (prevButton) prevButton.classList.remove('active-asset');
+        }
+        
+        gameState.currentAsset = assetKey;
+        
+        if (assetKey !== 'DELETE') {
+            const currentButton = document.getElementById(`btn_${assetKey}`);
+            if (currentButton) currentButton.classList.add('active-asset');
+        }
+        
+        showMessage(assetKey === 'DELETE' ? 'हटाने का मोड सक्रिय।' : `${ASSET_TYPES[assetKey].name} चुना गया।`, 'bg-yellow-100 text-yellow-700');
+        
+        if(previewActive) {
+            drawGrid();
+            previewActive = false;
+        }
+    }
+
+    function showMessage(text, className) {
+        clearTimeout(gameState.messageTimer);
+        const msgBox = document.getElementById('message');
+        msgBox.textContent = text;
+        msgBox.className = `message-box ${className}`;
+        msgBox.style.display = 'block';
+
+        gameState.messageTimer = setTimeout(() => {
+            msgBox.style.display = 'none';
+            msgBox.textContent = '';
+        }, 3000);
+    }
+
+    // माउस मूव इवेंट
+    canvas.addEventListener('mousemove', (e) => {
+        if (!isGameActive) return;
+        const rect = canvas.getBoundingClientRect();
+        gameState.lastMouseX = e.clientX - rect.left;
+        gameState.lastMouseY = e.clientY - rect.top;
+        drawPreview(gameState.lastMouseX, gameState.lastMouseY);
+    });
+    
+    // माउस बाहर निकलने पर प्रीव्यू साफ़ करें
+    canvas.addEventListener('mouseout', () => {
+        if(previewActive) {
+            drawGrid();
+            previewActive = false;
+        }
+    });
+
+
+    // क्लिक इवेंट
+    canvas.addEventListener('click', async (e) => {
+        if (!isGameActive) return;
+        
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        const x = Math.floor(mouseX / TILE_SIZE);
+        const y = Math.floor(mouseY / TILE_SIZE);
+        
+        if (x < 0 || y < 0 || x >= GRID_SIZE || y >= GRID_SIZE) return;
+        
+        const currentGrid = getCurrentGrid();
+
+        if (gameState.currentAsset === 'DELETE') {
+            if (currentGrid[x][y]) {
+                const tile = currentGrid[x][y];
+                let parentX = x, parentY = y;
+                let assetType;
+
+                if (tile.type === 'BLOCKED') {
+                    parentX = tile.parentX;
+                    parentY = tile.parentY;
+                    const mainTile = currentGrid[parentX][parentY];
+                    if (mainTile) {
+                       assetType = Object.values(ASSET_TYPES).find(a => a.name === mainTile.type);
+                    }
+                } else {
+                    assetType = Object.values(ASSET_TYPES).find(a => a.name === tile.type);
+                }
+
+                if (assetType) {
+                    for (let cx = parentX; cx < parentX + assetType.size; cx++) {
+                        for (let cy = parentY; cy < parentY + assetType.size; cy++) {
+                            if (cx < GRID_SIZE && cy < GRID_SIZE) {
+                                currentGrid[cx][cy] = null;
+                            }
+                        }
+                    }
+                    gameState.money += assetType.cost * 0.5; 
+                    showMessage(`${assetType.name} हटाया गया।`, 'bg-orange-100 text-orange-700');
+                    updateMetrics();
+                    drawGrid(); 
+                    await saveGame(); 
+                } else {
+                    showMessage('यहाँ हटाने के लिए कोई वैध एसेट नहीं है।', 'bg-red-100 text-red-700');
+                }
+            }
+            return;
+        }
+
+        if (gameState.currentAsset) {
+            const assetType = ASSET_TYPES[gameState.currentAsset];
+            const size = assetType.size;
+
+            if (checkCanPlace(x, y, size)) {
+                if (gameState.money >= assetType.cost) {
+                    await placeAsset(x, y, assetType);
+                } else {
+                    showMessage('अपर्याप्त पैसे!', 'bg-red-100 text-red-700');
+                }
+            } else {
+                 let msg = size > 1 ? `यह जगह (${size}x${size}) खाली नहीं है या ग्रिड सीमा से बाहर है!` : 'यह जगह खाली नहीं है!';
+                 showMessage(msg, 'bg-red-100 text-red-700');
+            }
+            
+            drawGrid();
+            previewActive = false;
+        }
+    });
+    
+    // ** ग्लोबल फ़ंक्शन्स को window में जोड़ना ताकि मॉडाल बटन उन्हें कॉल कर सकें **
+    window.changeMap = changeMap;
+    window.unlockMap = unlockMap;
+    window.openInstructionsModal = openInstructionsModal;
+    window.closeInstructionsModal = closeInstructionsModal;
+    window.closeMapSelectModal = closeMapSelectModal;
+
+
+    // ** इवेंट लिसनर्स अटैच करें **
+    document.getElementById('loginButton').addEventListener('click', handleLogin);
+    document.getElementById('newUserButton').addEventListener('click', handleNewUser);
+    document.getElementById('endTurnButton').addEventListener('click', endTurn);
+    document.getElementById('samjhoButton').addEventListener('click', samjho); 
+    document.getElementById('instructionsButton').addEventListener('click', openInstructionsModal);
+    document.getElementById('openMapSelectModalButton').addEventListener('click', openMapSelectModal);
+
+
+    // ** आरंभ (Initialization) **
+    window.onload = function () {
+        document.getElementById('loginButton').disabled = true; 
+        document.getElementById('newUserButton').disabled = true;
+        setupControls();
+        initFirebase();
+    }
+</script>
+
+</body>
+</html>
