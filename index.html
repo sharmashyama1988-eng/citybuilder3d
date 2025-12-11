@@ -3,16 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CityBuilder 2D - Vibrant UI</title>
+    <title>CityBuilder Final - Vibrant</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3909676898216763" crossorigin="anonymous"></script>
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
         
         :root {
-            /* Your Palette */
+            /* Your Requested Palette */
             --c-bittersweet: #FF5A5E;
             --c-indigo: #3F51B5;
             --c-slate-blue: #7C4DFF;
@@ -26,15 +25,16 @@
             background-color: #f3f4f6;
             color: #1f2937;
             height: 100vh;
+            width: 100vw;
+            overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden; 
         }
 
         /* ----- UI Components ----- */
         
-        /* Modern Card Style */
+        /* Glass Panel Styling */
         .glass-panel {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
@@ -43,67 +43,42 @@
             border-radius: 16px;
         }
 
-        /* Sidebar */
+        /* Sidebar & Layout */
+        .layout-container {
+            display: none; /* Initially Hidden */
+            width: 95%;
+            max-width: 1200px;
+            height: 90vh;
+            gap: 20px;
+        }
+
+        /* Responsive Layout: Mobile = Column, Desktop = Row */
+        @media(min-width: 1024px) {
+            .layout-container {
+                display: none; /* JS will change this to flex */
+                flex-direction: row; 
+            }
+        }
+        @media(max-width: 1023px) {
+            .layout-container {
+                flex-direction: column-reverse;
+            }
+        }
+
         .sidebar {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
+            flex: 1;
+            max-width: 100%; /* Mobile full width */
             padding: 20px;
             overflow-y: auto;
-        }
-
-        /* Buttons */
-        .btn-custom {
-            transition: all 0.2s ease;
-            font-weight: 700;
-            border-radius: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-size: 0.8rem;
-            position: relative;
-            top: 0;
-            border: none;
-            cursor: pointer;
-        }
-        .btn-custom:active {
-            top: 2px;
-        }
-        
-        .btn-indigo { background-color: var(--c-indigo); color: white; box-shadow: 0 4px 0 #283593; }
-        .btn-indigo:hover { background-color: #3949AB; }
-        .btn-indigo:active { box-shadow: none; }
-
-        .btn-slate { background-color: var(--c-slate-blue); color: white; box-shadow: 0 4px 0 #5E35B1; }
-        .btn-slate:hover { background-color: #673AB7; }
-        .btn-slate:active { box-shadow: none; }
-
-        .btn-danger { background-color: var(--c-bittersweet); color: white; box-shadow: 0 4px 0 #C62828; }
-        .btn-danger:hover { background-color: #E53935; }
-        .btn-danger:active { box-shadow: none; }
-
-        /* Asset Grid Buttons */
-        .asset-btn {
-            background: white;
-            border: 2px solid #e5e7eb;
-            border-radius: 12px;
-            padding: 8px;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-            cursor: pointer;
         }
-        .asset-btn:hover { border-color: var(--c-indigo); transform: translateY(-2px); }
-        .asset-btn.active {
-            border-color: var(--c-slate-blue);
-            background-color: #ede7f6; /* Very light violet */
-            box-shadow: 0 0 0 2px var(--c-slate-blue);
+        @media(min-width: 1024px) {
+            .sidebar { max-width: 350px; }
         }
 
-        /* Canvas */
-        .canvas-container {
+        .canvas-area {
+            flex: 2;
             background-color: #e0e0e0;
             border-radius: 16px;
             overflow: hidden;
@@ -112,16 +87,63 @@
             align-items: center;
             justify-content: center;
             border: 4px solid white;
-        }
-        canvas {
-            background-color: #f5f5f5; /* Grid bg */
-            cursor: crosshair;
-            touch-action: none;
+            position: relative;
         }
 
-        /* Modals */
+        /* Custom Scrollbar */
+        .scroller::-webkit-scrollbar { width: 6px; }
+        .scroller::-webkit-scrollbar-track { background: transparent; }
+        .scroller::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+        /* Buttons */
+        .btn-action {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: transform 0.1s, background 0.2s;
+            border: none;
+            color: white;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+            cursor: pointer;
+        }
+        .btn-action:active { transform: translateY(2px); box-shadow: none; }
+        
+        .bg-indigo { background-color: var(--c-indigo); }
+        .bg-indigo:hover { background-color: #303F9F; }
+
+        .bg-slate { background-color: var(--c-slate-blue); }
+        .bg-slate:hover { background-color: #673AB7; }
+
+        .bg-danger { background-color: var(--c-bittersweet); }
+        .bg-danger:hover { background-color: #E53935; }
+
+        /* Asset Grid Items */
+        .asset-item {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .asset-item:hover { border-color: var(--c-indigo); transform: translateY(-2px); }
+        .asset-item.active {
+            border-color: var(--c-slate-blue);
+            background-color: #ede7f6;
+            box-shadow: 0 0 0 2px var(--c-slate-blue);
+        }
+
+        /* Modal */
         .modal-overlay {
-            position: fixed; inset: 0; background: rgba(30, 30, 50, 0.8);
+            position: fixed; inset: 0; background: rgba(30, 30, 50, 0.9);
             display: flex; justify-content: center; align-items: center; z-index: 50;
             backdrop-filter: blur(5px);
         }
@@ -129,102 +151,82 @@
             background: white; padding: 30px; border-radius: 20px;
             max-width: 400px; width: 90%; text-align: center;
             box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-            border-top: 6px solid var(--c-slate-blue);
+            border-top: 8px solid var(--c-slate-blue);
         }
 
-        /* Layout Response */
-        .layout-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-            width: 95%;
-            max-width: 1200px;
-            height: 90vh;
-        }
-        @media(min-width: 1024px) {
-            .layout-grid {
-                grid-template-columns: 350px 1fr;
-            }
-        }
+        canvas { background-color: #fafafa; touch-action: none; }
     </style>
 </head>
 <body>
 
     <div id="loginModal" class="modal-overlay">
         <div class="modal-box">
-            <h1 class="text-3xl font-extrabold text-[#6A1B9A] mb-2">City Builder</h1>
-            <p class="text-sm text-gray-500 mb-6 font-bold">VIBRANT EDITION</p>
+            <h1 class="text-4xl font-black text-[#6A1B9A] mb-1">CityBuilder</h1>
+            <p class="text-xs font-bold text-[#FF80AB] tracking-widest mb-8">VIBRANT EDITION</p>
             
-            <input type="text" id="loginId" placeholder="Enter City Name" class="w-full bg-gray-50 border-2 border-gray-200 p-3 rounded-xl mb-4 text-center font-bold text-gray-700 focus:outline-none focus:border-[#7C4DFF] focus:ring-0 transition">
+            <input type="text" id="loginId" placeholder="Enter City Name" class="w-full bg-gray-50 border-2 border-gray-200 p-4 rounded-xl mb-4 text-center font-bold text-gray-700 text-lg focus:outline-none focus:border-[#7C4DFF]">
             
             <div class="space-y-3">
-                <button id="btnLogin" class="btn-custom btn-indigo w-full p-3 text-sm">LOAD CITY</button>
-                <button id="btnNew" class="btn-custom btn-slate w-full p-3 text-sm">NEW GAME</button>
+                <button id="btnLogin" class="btn-action bg-indigo">LOAD CITY</button>
+                <button id="btnNew" class="btn-action bg-slate">NEW GAME</button>
             </div>
             <p id="loginMsg" class="mt-4 text-xs font-bold text-[#FF5A5E] h-4"></p>
         </div>
     </div>
 
-    <div id="gameContainer" class="layout-grid hidden">
+    <div id="gameUI" class="layout-container">
         
-        <aside class="glass-panel sidebar">
-            <div class="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
+        <aside class="glass-panel sidebar scroller">
+            <div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-100">
                 <div>
-                    <h2 class="text-xl font-black text-[#6A1B9A]">MY CITY</h2>
-                    <span id="userIdDisplay" class="text-xs font-bold text-gray-400 uppercase tracking-wider">Guest</span>
+                    <h2 class="text-2xl font-black text-[#6A1B9A]">MY CITY</h2>
+                    <span id="userIdDisplay" class="text-xs font-bold text-gray-400 uppercase">Guest</span>
                 </div>
                 <div class="text-right">
                     <span class="block text-[10px] font-bold text-gray-400">TURN</span>
-                    <span id="turn_val" class="text-2xl font-black text-[#3F51B5]">1</span>
+                    <span id="turn_val" class="text-3xl font-black text-[#3F51B5]">1</span>
                 </div>
             </div>
 
             <div class="grid grid-cols-2 gap-3 mb-6">
                 <div class="bg-white p-3 rounded-xl border border-gray-100 text-center shadow-sm">
-                    <i class="fas fa-coins text-[#FF5A5E] mb-1"></i>
-                    <div class="text-xs text-gray-400 font-bold">FUNDS</div>
-                    <div class="font-bold text-gray-800">₹<span id="money_val">0</span></div>
+                    <i class="fas fa-coins text-[#FF5A5E] mb-1 text-lg"></i>
+                    <div class="text-[10px] text-gray-400 font-bold uppercase">Funds</div>
+                    <div class="font-black text-gray-800 text-lg">₹<span id="money_val">0</span></div>
                 </div>
                 <div class="bg-white p-3 rounded-xl border border-gray-100 text-center shadow-sm">
-                    <i class="fas fa-users text-[#3F51B5] mb-1"></i>
-                    <div class="text-xs text-gray-400 font-bold">PEOPLE</div>
-                    <div class="font-bold text-gray-800" id="pop_val">0</div>
+                    <i class="fas fa-users text-[#3F51B5] mb-1 text-lg"></i>
+                    <div class="text-[10px] text-gray-400 font-bold uppercase">People</div>
+                    <div class="font-black text-gray-800 text-lg" id="pop_val">0</div>
                 </div>
-                <div class="bg-white p-3 rounded-xl border border-gray-100 text-center col-span-2 flex justify-around items-center shadow-sm">
-                    <div>
-                        <span class="text-[#FF80AB]"><i class="fas fa-smile"></i></span> <span id="happiness_val" class="font-bold text-gray-700">50</span>%
-                    </div>
-                    <div class="h-4 w-[1px] bg-gray-200"></div>
-                    <div>
-                        <span class="text-[#FF5A5E]"><i class="fas fa-bolt"></i></span> <span id="power_val" class="font-bold text-gray-700">0</span>
-                    </div>
-                    <div class="h-4 w-[1px] bg-gray-200"></div>
-                    <div>
-                        <span class="text-[#7C4DFF]"><i class="fas fa-tint"></i></span> <span id="water_val" class="font-bold text-gray-700">0</span>
-                    </div>
+                <div class="col-span-2 flex justify-between bg-gray-50 p-2 rounded-lg text-xs font-bold text-gray-600 px-4">
+                    <span><i class="fas fa-smile text-[#FF80AB] mr-1"></i> <span id="happy_val">50</span>%</span>
+                    <span><i class="fas fa-bolt text-[#FF5A5E] mr-1"></i> <span id="power_val">0</span></span>
+                    <span><i class="fas fa-tint text-[#7C4DFF] mr-1"></i> <span id="water_val">0</span></span>
                 </div>
             </div>
 
-            <div class="flex-1 overflow-y-auto pr-1">
+            <div class="flex-1 overflow-y-auto mb-4">
                 <h3 class="text-xs font-bold text-gray-400 mb-3 uppercase tracking-widest">Construction</h3>
                 <div id="controls" class="grid grid-cols-3 gap-2">
                     </div>
             </div>
 
-            <div id="messageBox" class="mt-4 p-2 rounded-lg text-center text-xs font-bold hidden"></div>
+            <div id="messageBox" class="p-3 rounded-lg text-center text-xs font-bold hidden mb-3"></div>
 
-            <div class="mt-4 grid grid-cols-2 gap-2">
-                <button id="endTurnButton" class="col-span-2 btn-custom btn-indigo p-3 text-sm">Next Week (Earn Tax)</button>
-                <button onclick="document.getElementById('mapModal').classList.remove('hidden')" class="btn-custom bg-gray-200 text-gray-600 p-2 hover:bg-gray-300">Map</button>
-                <button onclick="document.getElementById('rulesModal').classList.remove('hidden')" class="btn-custom bg-gray-200 text-gray-600 p-2 hover:bg-gray-300">Help</button>
+            <div class="grid grid-cols-2 gap-3 mt-auto">
+                <button id="btnNextTurn" class="col-span-2 btn-action bg-indigo py-4 text-base">
+                    Next Week <span class="opacity-70 text-xs font-normal ml-1">(Income)</span>
+                </button>
+                <button onclick="toggleModal('mapModal')" class="btn-action bg-slate text-xs py-3">Map</button>
+                <button onclick="toggleModal('rulesModal')" class="btn-action bg-slate text-xs py-3">Help</button>
             </div>
         </aside>
 
-        <main class="canvas-container relative">
+        <main class="canvas-area">
             <canvas id="cityCanvas"></canvas>
-            
             <div class="absolute top-4 left-4 bg-white/90 px-3 py-1 rounded-full text-xs font-bold text-[#6A1B9A] shadow-md pointer-events-none">
-                Map Area <span id="currentMapDisplay">1</span>
+                Region <span id="mapIndex">1</span>
             </div>
         </main>
     </div>
@@ -232,96 +234,78 @@
     <div id="mapModal" class="modal-overlay hidden">
         <div class="modal-box text-left">
             <h3 class="text-xl font-bold text-[#3F51B5] mb-4">Select Region</h3>
-            <div id="mapList" class="max-h-60 overflow-y-auto space-y-2 mb-4"></div>
-            <button onclick="document.getElementById('mapModal').classList.add('hidden')" class="btn-custom btn-danger w-full p-2">Close</button>
+            <div id="mapList" class="max-h-64 overflow-y-auto space-y-2 mb-4 pr-1 scroller"></div>
+            <button onclick="toggleModal('mapModal')" class="btn-action bg-danger">Close</button>
         </div>
     </div>
 
     <div id="rulesModal" class="modal-overlay hidden">
         <div class="modal-box text-left">
             <h3 class="text-xl font-bold text-[#3F51B5] mb-4">How to Play</h3>
-            <ul class="text-sm space-y-2 text-gray-600 mb-6">
-                <li><i class="fas fa-hammer text-[#7C4DFF]"></i> <strong>Build:</strong> Select a tool and click the grid.</li>
-                <li><i class="fas fa-home text-[#F8BBD0]"></i> <strong>Homes:</strong> Need Power & Water to grow.</li>
-                <li><i class="fas fa-industry text-[#6A1B9A]"></i> <strong>Industry:</strong> Earns money but pollutes.</li>
-                <li><i class="fas fa-forward text-[#3F51B5]"></i> <strong>Next Week:</strong> Collect taxes.</li>
+            <ul class="text-sm space-y-3 text-gray-600 mb-6">
+                <li class="flex items-center"><i class="fas fa-mouse-pointer w-6 text-[#7C4DFF]"></i> Select a building & click grid to build.</li>
+                <li class="flex items-center"><i class="fas fa-home w-6 text-[#F8BBD0]"></i> Houses need Power & Water nearby.</li>
+                <li class="flex items-center"><i class="fas fa-industry w-6 text-[#6A1B9A]"></i> Industry earns money but reduces happiness.</li>
+                <li class="flex items-center"><i class="fas fa-forward w-6 text-[#3F51B5]"></i> Click "Next Week" to collect taxes.</li>
             </ul>
-            <button onclick="document.getElementById('rulesModal').classList.add('hidden')" class="btn-custom btn-indigo w-full p-2">Understood</button>
+            <button onclick="toggleModal('rulesModal')" class="btn-action bg-indigo">Got it</button>
         </div>
     </div>
 
-    <script type="module">
+    <script>
         // --- 1. CONFIGURATION ---
         const GRID_SIZE = 20;
         const TOTAL_MAPS = 20;
-        const CANVAS_SIZE = 800; 
+        const CANVAS_SIZE = 800; // Internal Resolution
         const TILE_SIZE = CANVAS_SIZE / GRID_SIZE;
 
-        // ** COLOR PALETTE APPLIED TO ASSETS **
+        // ** COLOR PALETTE MAPPING **
+        // Bittersweet: #FF5A5E, Indigo: #3F51B5, Slate: #7C4DFF, HotPink: #FF80AB, PalePink: #F8BBD0, Violet: #6A1B9A
         const ASSETS = {
-            HOUSE: { name: 'House', cost: 100, size: 1, pop: 10, power: -2, water: -2, happiness: 1, revenue: 5, color: '#F8BBD0', icon: 'fa-home' }, // Pale Pink
-            
-            POWER_PLANT: { name: 'Power', cost: 500, size: 2, pop: 0, power: 50, water: -10, happiness: -5, revenue: 0, color: '#FF5A5E', icon: 'fa-bolt' }, // Bittersweet
-            
-            WATER_TOWER: { name: 'Water', cost: 300, size: 1, pop: 0, power: 0, water: 30, happiness: 0, revenue: 0, color: '#7C4DFF', icon: 'fa-tint' }, // Slate Blue
-            
-            ROAD: { name: 'Road', cost: 20, size: 1, pop: 0, power: 0, water: 0, happiness: 0, revenue: 0, color: '#5C6BC0', icon: 'fa-road' }, // Darker Indigo tone
-            
-            SCHOOL: { name: 'School', cost: 500, size: 2, pop: 0, power: -10, water: -10, happiness: 15, revenue: -10, color: '#FFCC80', icon: 'fa-graduation-cap' }, // Orange tint
-            
-            FACTORY: { name: 'Factory', cost: 2000, size: 3, pop: 0, power: -50, water: -50, happiness: -30, revenue: 80, color: '#6A1B9A', icon: 'fa-industry' }, // Dark Violet
-            
-            MALL: { name: 'Mall', cost: 10000, size: 4, pop: 0, power: -60, water: -60, happiness: 60, revenue: 250, color: '#FF80AB', icon: 'fa-shopping-bag' }, // Hot Pink
+            HOUSE: { name: 'House', cost: 100, size: 1, pop: 8, power: -2, water: -2, happiness: 2, revenue: 5, color: '#F8BBD0', icon: 'fa-home' },
+            POWER: { name: 'Power', cost: 500, size: 2, pop: 0, power: 60, water: -5, happiness: -5, revenue: 0, color: '#FF5A5E', icon: 'fa-bolt' },
+            WATER: { name: 'Water', cost: 300, size: 1, pop: 0, power: 0, water: 50, happiness: 0, revenue: 0, color: '#7C4DFF', icon: 'fa-tint' },
+            ROAD:  { name: 'Road',  cost: 20,  size: 1, pop: 0, power: 0, water: 0, happiness: 0, revenue: 0, color: '#9FA8DA', icon: 'fa-road' },
+            APT:   { name: 'Apt.',  cost: 400, size: 1, pop: 20, power: -5, water: -5, happiness: 1, revenue: 15, color: '#3F51B5', icon: 'fa-building' },
+            MALL:  { name: 'Mall',  cost: 2500, size: 3, pop: 0, power: -20, water: -20, happiness: 15, revenue: 120, color: '#FF80AB', icon: 'fa-shopping-bag' },
+            IND:   { name: 'Ind.',  cost: 1500, size: 2, pop: 0, power: -30, water: -30, happiness: -15, revenue: 80, color: '#6A1B9A', icon: 'fa-industry' },
         };
 
-        // --- 2. GAME STATE ---
+        // --- 2. STATE ---
         let state = {
-            money: 15000,
+            money: 10000,
             turn: 1,
             population: 0,
             happiness: 50,
             currentMap: 0,
             unlockedMaps: 1,
-            grids: Array.from({length: TOTAL_MAPS}, () => Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null)))
+            grids: [] // Initialized later
         };
         
-        let currentAsset = null;
+        let currentTool = null;
         let gameId = null;
-        let canvas, ctx;
+        const canvas = document.getElementById('cityCanvas');
+        const ctx = canvas.getContext('2d');
 
-        // --- 3. INIT & CORE ---
-        function init() {
-            canvas = document.getElementById('cityCanvas');
-            ctx = canvas.getContext('2d');
-            
-            // Responsive Canvas Sizing
-            resizeCanvas();
-            window.addEventListener('resize', () => { resizeCanvas(); drawGrid(); });
-
-            setupControls();
+        // --- 3. INIT & CORE FUNCTIONS ---
+        function initGridArray() {
+            state.grids = Array.from({length: TOTAL_MAPS}, () => 
+                Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null))
+            );
         }
 
-        function resizeCanvas() {
-            const container = canvas.parentElement;
-            // We keep internal resolution high (800x800) but scale via CSS
-            canvas.width = CANVAS_SIZE;
-            canvas.height = CANVAS_SIZE;
-            canvas.style.width = '100%';
-            canvas.style.height = '100%';
-        }
-
-        function getCurrentGrid() { return state.grids[state.currentMap]; }
+        function getGrid() { return state.grids[state.currentMap]; }
 
         function drawGrid() {
-            const grid = getCurrentGrid();
+            const grid = getGrid();
             ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
 
-            // 1. Background (Light Grid)
+            // Background
             ctx.fillStyle = '#FAFAFA'; 
             ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
 
-            // 2. Grid Lines (Subtle)
-            ctx.strokeStyle = '#E0E0E0';
+            // Grid Lines
+            ctx.strokeStyle = '#EEEEEE';
             ctx.lineWidth = 1;
             ctx.beginPath();
             for(let i=0; i<=GRID_SIZE; i++) {
@@ -330,13 +314,19 @@
             }
             ctx.stroke();
 
-            // 3. Assets
+            // Objects
             for(let x=0; x<GRID_SIZE; x++) {
                 for(let y=0; y<GRID_SIZE; y++) {
                     const cell = grid[x][y];
                     if(cell && cell.type !== 'BLOCKED') {
-                        const asset = ASSETS[cell.type] || Object.values(ASSETS).find(a => a.name === cell.name);
-                        if(asset) drawAsset(x, y, asset, cell.size);
+                        // Find Asset Data (Support old saves too)
+                        let asset = ASSETS[cell.type];
+                        // If saved with old keys, try to map (simple fallback)
+                        if(!asset) asset = Object.values(ASSETS).find(a => a.name === cell.name);
+                        
+                        if(asset) {
+                            drawAsset(x, y, asset, cell.size);
+                        }
                     }
                 }
             }
@@ -347,74 +337,71 @@
             const py = y * TILE_SIZE;
             const pSize = size * TILE_SIZE;
 
-            // Box
             ctx.fillStyle = asset.color;
-            // Slight padding for look
-            ctx.fillRect(px + 2, py + 2, pSize - 4, pSize - 4);
-            
-            // Border effect
-            ctx.strokeStyle = 'rgba(0,0,0,0.1)';
-            ctx.strokeRect(px + 2, py + 2, pSize - 4, pSize - 4);
+            ctx.fillRect(px+2, py+2, pSize-4, pSize-4);
 
-            // Text/Icon
-            if(size > 1 || asset.name.length < 6) {
+            // Border
+            ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+            ctx.strokeRect(px+2, py+2, pSize-4, pSize-4);
+
+            // Label
+            if(size > 1 || asset.name.length < 5) {
                 ctx.fillStyle = (asset.color === '#6A1B9A' || asset.color === '#3F51B5') ? 'white' : '#333';
-                ctx.font = 'bold 14px Nunito, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
+                ctx.font = 'bold 16px Nunito';
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 ctx.fillText(asset.name, px + pSize/2, py + pSize/2);
             }
         }
 
         function placeAsset(x, y) {
-            if(!currentAsset) return;
-            const grid = getCurrentGrid();
+            if(!currentTool) return;
+            const grid = getGrid();
 
-            // Delete Mode
-            if(currentAsset === 'DELETE') {
+            // DEMOLISH Logic
+            if(currentTool === 'DELETE') {
                 const cell = grid[x][y];
                 if(cell) {
                     let ox = cell.type === 'BLOCKED' ? cell.parentX : x;
                     let oy = cell.type === 'BLOCKED' ? cell.parentY : y;
                     const main = grid[ox][oy];
-                    const sz = main ? main.size : 1;
                     
-                    // Refund
-                    let cost = 0;
-                    const asset = ASSETS[main.type] || Object.values(ASSETS).find(a => a.name === main.name);
-                    if(asset) cost = asset.cost;
-                    state.money += Math.floor(cost * 0.5);
+                    if(main) {
+                        let asset = ASSETS[main.type] || Object.values(ASSETS).find(a => a.name === main.name);
+                        let refund = asset ? Math.floor(asset.cost * 0.5) : 0;
+                        let sz = main.size || 1;
 
-                    // Clear
-                    for(let i=0; i<sz; i++) for(let j=0; j<sz; j++) grid[ox+i][oy+j] = null;
-                    
-                    showMessage(`Demolished! +₹${Math.floor(cost*0.5)}`, 'red');
-                    updateStats(); drawGrid(); saveGame();
+                        // Clear Grid
+                        for(let i=0; i<sz; i++) for(let j=0; j<sz; j++) grid[ox+i][oy+j] = null;
+                        
+                        state.money += refund;
+                        notify(`Removed! +₹${refund}`, 'red');
+                        updateUI(); drawGrid(); saveGame();
+                    }
                 }
                 return;
             }
 
-            // Build Mode
-            const asset = ASSETS[currentAsset];
+            // BUILD Logic
+            const asset = ASSETS[currentTool];
             
             // Check Bounds
-            if(x + asset.size > GRID_SIZE || y + asset.size > GRID_SIZE) { showMessage("Out of bounds!", "red"); return; }
+            if(x + asset.size > GRID_SIZE || y + asset.size > GRID_SIZE) { notify("Out of bounds!", "red"); return; }
             
             // Check Collision
             for(let i=0; i<asset.size; i++) {
                 for(let j=0; j<asset.size; j++) {
-                    if(grid[x+i][y+j] !== null) { showMessage("Space blocked!", "red"); return; }
+                    if(grid[x+i][y+j] !== null) { notify("Blocked!", "red"); return; }
                 }
             }
 
             // Check Money
-            if(state.money < asset.cost) { showMessage("Not enough funds!", "red"); return; }
+            if(state.money < asset.cost) { notify("Low Funds!", "red"); return; }
 
             // Place
             state.money -= asset.cost;
-            grid[x][y] = { type: currentAsset, size: asset.size, name: asset.name };
+            grid[x][y] = { type: currentTool, size: asset.size, name: asset.name };
             
-            // Blocking
+            // Fill Blocks
             for(let i=0; i<asset.size; i++) {
                 for(let j=0; j<asset.size; j++) {
                     if(i===0 && j===0) continue;
@@ -422,16 +409,17 @@
                 }
             }
 
-            showMessage(`${asset.name} built!`, 'indigo');
-            updateStats(); drawGrid(); saveGame();
+            notify(`${asset.name} Built!`, 'indigo');
+            updateUI(); drawGrid(); saveGame();
         }
 
         function nextTurn() {
             let income = 0;
-            let happyChange = 0;
+            let happyBonus = 0;
             let pDem=0, pCap=0, wDem=0, wCap=0;
-            const grid = getCurrentGrid();
+            const grid = getGrid();
 
+            // Scan Grid
             for(let x=0; x<GRID_SIZE; x++) {
                 for(let y=0; y<GRID_SIZE; y++) {
                     const cell = grid[x][y];
@@ -439,7 +427,7 @@
                         let asset = ASSETS[cell.type] || Object.values(ASSETS).find(a => a.name === cell.name);
                         if(asset) {
                             income += asset.revenue;
-                            happyChange += asset.happiness;
+                            happyBonus += asset.happiness;
                             if(asset.power < 0) pDem += Math.abs(asset.power); else pCap += asset.power;
                             if(asset.water < 0) wDem += Math.abs(asset.water); else wCap += asset.water;
                         }
@@ -447,181 +435,179 @@
                 }
             }
 
-            // Rules
-            if(pCap < pDem) { happyChange -= 15; showMessage("Low Power!", "red"); }
-            if(wCap < wDem) { happyChange -= 15; showMessage("Low Water!", "red"); }
+            // Utilities Check
+            if(pCap < pDem) { happyBonus -= 15; notify("Power Shortage!", "red"); }
+            if(wCap < wDem) { happyBonus -= 15; notify("Water Shortage!", "red"); }
 
-            state.happiness = Math.max(0, Math.min(100, 50 + happyChange));
+            state.happiness = Math.max(0, Math.min(100, 50 + happyBonus));
             state.money += income;
             state.turn++;
-
-            updateStats(); saveGame();
-            if(income > 0) showMessage(`Week ${state.turn}: +₹${income}`, 'green');
+            
+            updateUI(); saveGame();
+            if(income > 0) notify(`Income: +₹${income}`, 'green');
         }
 
-        function updateStats() {
-            let pop = 0, pDem=0, wDem=0;
-            const grid = getCurrentGrid();
+        function updateUI() {
+            // Recalculate Pop & Utils for display
+            let pop = 0, p=0, w=0;
+            const grid = getGrid();
             for(let x=0; x<GRID_SIZE; x++) {
                 for(let y=0; y<GRID_SIZE; y++) {
                     const cell = grid[x][y];
                     if(cell && cell.type !== 'BLOCKED') {
                         let asset = ASSETS[cell.type] || Object.values(ASSETS).find(a => a.name === cell.name);
-                        if(asset) {
-                            pop += asset.pop;
-                            if(asset.power < 0) pDem += Math.abs(asset.power);
-                            if(asset.water < 0) wDem += Math.abs(asset.water);
-                        }
+                        if(asset) { pop += asset.pop; }
                     }
                 }
             }
             state.population = pop;
+
             document.getElementById('money_val').innerText = state.money;
             document.getElementById('pop_val').innerText = state.population;
-            document.getElementById('happiness_val').innerText = state.happiness;
+            document.getElementById('happy_val').innerText = state.happiness;
             document.getElementById('turn_val').innerText = state.turn;
-            document.getElementById('power_val').innerText = pDem;
-            document.getElementById('water_val').innerText = wDem;
-            document.getElementById('currentMapDisplay').innerText = state.currentMap + 1;
+            document.getElementById('mapIndex').innerText = state.currentMap + 1;
         }
 
-        // --- 4. UI HELPERS ---
-        function setupControls() {
-            const div = document.getElementById('controls');
-            div.innerHTML = '';
-            Object.keys(ASSETS).forEach(key => {
-                const a = ASSETS[key];
-                const btn = document.createElement('div');
-                btn.className = 'asset-btn';
-                btn.innerHTML = `
-                    <i class="fas ${a.icon} text-xl mb-1" style="color:${a.color}"></i>
-                    <span class="text-[10px] font-bold text-gray-500 uppercase">${a.name}</span>
-                    <span class="text-[10px] font-bold text-[#6A1B9A]">₹${a.cost}</span>
-                `;
-                btn.onclick = () => {
-                    currentAsset = key;
-                    document.querySelectorAll('.asset-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                };
-                div.appendChild(btn);
-            });
-
-            const delBtn = document.createElement('div');
-            delBtn.className = 'asset-btn border-red-200';
-            delBtn.innerHTML = `<i class="fas fa-trash text-[#FF5A5E] text-xl mb-1"></i><span class="text-[10px] font-bold text-gray-500">REMOVE</span>`;
-            delBtn.onclick = () => {
-                currentAsset = 'DELETE';
-                document.querySelectorAll('.asset-btn').forEach(b => b.classList.remove('active'));
-                delBtn.classList.add('active');
-            };
-            div.appendChild(delBtn);
-        }
-
-        function showMessage(msg, type) {
+        function notify(msg, type) {
             const el = document.getElementById('messageBox');
             el.innerText = msg;
-            el.className = `mt-4 p-2 rounded-lg text-center text-xs font-bold block ${type === 'red' ? 'bg-[#FFEBEE] text-[#C62828]' : 'bg-[#E8EAF6] text-[#283593]'}`;
+            el.className = `p-3 rounded-lg text-center text-xs font-bold mb-3 block ${type === 'red' ? 'bg-[#FFEBEE] text-[#C62828]' : (type === 'green' ? 'bg-green-100 text-green-700' : 'bg-[#E8EAF6] text-[#283593]')}`;
+            el.classList.remove('hidden');
             setTimeout(() => el.classList.add('hidden'), 2000);
         }
 
-        // --- 5. SAVE SYSTEM ---
+        // --- 4. INPUT & SAVE ---
+        
         function saveGame() {
-            if(!gameId) return;
-            localStorage.setItem('cb2d_vibrant_' + gameId, JSON.stringify(state));
+            if(gameId) localStorage.setItem('cb_vibrant_save_' + gameId, JSON.stringify(state));
         }
+
         function loadGame(id) {
-            const data = localStorage.getItem('cb2d_vibrant_' + id);
+            const data = localStorage.getItem('cb_vibrant_save_' + id);
             if(data) {
                 const parsed = JSON.parse(data);
                 state = { ...state, ...parsed };
-                if(!Array.isArray(state.grids)) state.grids = Array.from({length: TOTAL_MAPS}, () => Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null)));
+                // Ensure grids array structure
+                if(!state.grids || state.grids.length === 0) initGridArray();
                 return true;
             }
             return false;
         }
 
-        // --- 6. INTERACTION ---
+        // Canvas Click
         canvas.addEventListener('click', (e) => {
-            // Smart Click Coordinates based on Canvas CSS size
             const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
+            // Scale logic for CSS resized canvas
+            const scaleX = CANVAS_SIZE / rect.width;
+            const scaleY = CANVAS_SIZE / rect.height;
+            
             const x = Math.floor(((e.clientX - rect.left) * scaleX) / TILE_SIZE);
             const y = Math.floor(((e.clientY - rect.top) * scaleY) / TILE_SIZE);
             placeAsset(x, y);
         });
 
+        // --- 5. SETUP UI ---
+        
+        // Generate Buttons
+        const controls = document.getElementById('controls');
+        Object.keys(ASSETS).forEach(key => {
+            const a = ASSETS[key];
+            const div = document.createElement('div');
+            div.className = 'asset-item';
+            div.innerHTML = `
+                <i class="fas ${a.icon} text-xl mb-1" style="color:${a.color}"></i>
+                <span class="text-[9px] font-bold text-gray-500 uppercase">${a.name}</span>
+                <span class="text-[9px] font-bold text-[#6A1B9A]">₹${a.cost}</span>
+            `;
+            div.onclick = () => {
+                currentTool = key;
+                document.querySelectorAll('.asset-item').forEach(el => el.classList.remove('active'));
+                div.classList.add('active');
+            };
+            controls.appendChild(div);
+        });
+
+        // Delete Button
+        const delBtn = document.createElement('div');
+        delBtn.className = 'asset-item border-red-200';
+        delBtn.innerHTML = `<i class="fas fa-trash text-[#FF5A5E] text-xl mb-1"></i><span class="text-[9px] font-bold text-gray-500">REMOVE</span>`;
+        delBtn.onclick = () => {
+            currentTool = 'DELETE';
+            document.querySelectorAll('.asset-item').forEach(el => el.classList.remove('active'));
+            delBtn.classList.add('active');
+        };
+        controls.appendChild(delBtn);
+
+        // Login Logic
         document.getElementById('btnLogin').onclick = () => {
-            const id = document.getElementById('loginId').value;
-            if(id.length > 0) {
-                gameId = id;
-                document.getElementById('userIdDisplay').innerText = id;
-                if(loadGame(id)) {
-                    startGame();
-                } else {
-                    document.getElementById('loginMsg').innerText = "No save found. Try NEW GAME.";
-                }
-            }
+            const id = document.getElementById('loginId').value.trim();
+            if(!id) return;
+            gameId = id;
+            if(loadGame(id)) startGame();
+            else document.getElementById('loginMsg').innerText = "Save not found. Start New Game.";
         };
 
         document.getElementById('btnNew').onclick = () => {
-            const id = document.getElementById('loginId').value;
-            if(id.length > 0) {
-                gameId = id;
-                document.getElementById('userIdDisplay').innerText = id;
-                // Reset State
-                state = { money: 15000, turn: 1, population: 0, happiness: 50, currentMap: 0, unlockedMaps: 1, grids: Array.from({length: TOTAL_MAPS}, () => Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null))) };
-                saveGame();
-                startGame();
-            }
+            const id = document.getElementById('loginId').value.trim();
+            if(!id) return;
+            gameId = id;
+            state = { money: 10000, turn: 1, population: 0, happiness: 50, currentMap: 0, unlockedMaps: 1, grids: [] };
+            initGridArray();
+            saveGame();
+            startGame();
         };
 
         function startGame() {
-            document.getElementById('loginModal').style.display = 'none';
-            document.getElementById('gameContainer').classList.remove('hidden');
-            document.getElementById('gameContainer').classList.add('flex'); // or layout-grid logic
-            updateStats();
+            document.getElementById('userIdDisplay').innerText = gameId;
+            document.getElementById('loginModal').classList.add('hidden');
+            const ui = document.getElementById('gameUI');
+            ui.style.display = 'flex'; // Force Flexbox
+            
+            // Trigger Resize logic
+            canvas.width = CANVAS_SIZE; canvas.height = CANVAS_SIZE;
+            updateUI();
             drawGrid();
-            // Fix layout visibility
-            document.getElementById('gameContainer').style.display = 'grid';
+            refreshMapList();
         }
 
-        document.getElementById('endTurnButton').onclick = nextTurn;
+        document.getElementById('btnNextTurn').onclick = nextTurn;
 
-        // Map Switching UI Logic
-        const mapCosts = [0, 5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000, 45000, 50000, 55000, 60000, 65000, 70000, 75000, 80000, 85000, 90000, 95000];
-        
+        // Map Modal Logic
+        const mapCosts = [0, 5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000, 45000];
         window.refreshMapList = () => {
             const list = document.getElementById('mapList');
             list.innerHTML = '';
             for(let i=0; i<TOTAL_MAPS; i++) {
                 const div = document.createElement('div');
-                div.className = `flex justify-between items-center p-2 rounded ${i === state.currentMap ? 'bg-indigo-50 border border-indigo-200' : 'bg-gray-50'}`;
+                div.className = `flex justify-between items-center p-2 rounded mb-1 ${i === state.currentMap ? 'bg-indigo-50 border border-indigo-200' : 'bg-gray-50'}`;
                 
                 let btn = '';
                 if(i < state.unlockedMaps) {
-                    btn = `<button class="text-xs bg-indigo-500 text-white px-2 py-1 rounded" onclick="changeMap(${i})">VISIT</button>`;
+                    btn = `<button class="text-xs bg-indigo-500 text-white px-2 py-1 rounded" onclick="changeMap(${i})">GO</button>`;
                 } else {
-                    btn = `<button class="text-xs bg-pink-400 text-white px-2 py-1 rounded" onclick="unlockMap(${i}, ${mapCosts[i]})">BUY ₹${mapCosts[i]}</button>`;
+                    const cost = mapCosts[i] || 50000;
+                    btn = `<button class="text-xs bg-pink-400 text-white px-2 py-1 rounded" onclick="unlockMap(${i}, ${cost})">BUY ₹${cost}</button>`;
                 }
                 if(i === state.currentMap) btn = `<span class="text-xs font-bold text-indigo-600">ACTIVE</span>`;
 
-                div.innerHTML = `<span class="text-sm font-bold text-gray-600">Region ${i+1}</span> ${btn}`;
+                div.innerHTML = `<span class="text-xs font-bold text-gray-600">Region ${i+1}</span> ${btn}`;
                 list.appendChild(div);
             }
         };
 
-        window.changeMap = (i) => { state.currentMap = i; updateStats(); drawGrid(); document.getElementById('mapModal').classList.add('hidden'); saveGame(); };
+        window.changeMap = (i) => { state.currentMap = i; updateUI(); drawGrid(); toggleModal('mapModal'); refreshMapList(); saveGame(); };
         window.unlockMap = (i, cost) => { 
             if(state.money >= cost) { state.money -= cost; state.unlockedMaps = i + 1; changeMap(i); } 
             else alert("Need more funds!"); 
         };
 
-        // Hook up map button to refresh list
-        const mapBtn = document.querySelector('button[onclick*="mapModal"]');
-        if(mapBtn) mapBtn.addEventListener('click', window.refreshMapList);
+        window.toggleModal = (id) => {
+            const el = document.getElementById(id);
+            if(el.classList.contains('hidden')) { el.classList.remove('hidden'); if(id==='mapModal') refreshMapList(); }
+            else el.classList.add('hidden');
+        };
 
-        init();
     </script>
 </body>
 </html>
