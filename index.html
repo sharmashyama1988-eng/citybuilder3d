@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 <html lang="hi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CityBuilder 3D - Easy Mode</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3909676898216763" crossorigin="anonymous"></script>
-    
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3909676898216763"
+        crossorigin="anonymous"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&display=swap');
-        
+
         :root {
             --c-indigo: #3F51B5;
             --c-bittersweet: #FF5A5E;
@@ -26,14 +28,15 @@
             height: 100vh;
             width: 100vw;
             overflow: hidden;
-            user-select: none; /* Text selection disable for game feel */
+            user-select: none;
+            /* Text selection disable for game feel */
         }
 
         /* Top Stats Bar */
         .hud-panel {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(8px);
-            border-bottom: 2px solid rgba(0,0,0,0.05);
+            border-bottom: 2px solid rgba(0, 0, 0, 0.05);
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         }
 
@@ -41,15 +44,17 @@
         .controls-dock {
             background: rgba(255, 255, 255, 0.98);
             border-top: 1px solid #e5e7eb;
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
-            padding-bottom: env(safe-area-inset-bottom); /* iPhone safe area */
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+            padding-bottom: env(safe-area-inset-bottom);
+            /* iPhone safe area */
         }
 
         /* Big Action Button */
         .btn-action {
             transition: transform 0.1s, background 0.2s;
-            border-bottom: 4px solid rgba(0,0,0,0.15);
+            border-bottom: 4px solid rgba(0, 0, 0, 0.15);
         }
+
         .btn-action:active {
             transform: translateY(2px);
             border-bottom-width: 0;
@@ -70,26 +75,33 @@
             background: #f9fafb;
             cursor: pointer;
         }
+
         .tool-card.active {
             background: #eef2ff;
             border-color: var(--c-indigo);
             box-shadow: 0 4px 12px rgba(63, 81, 181, 0.2);
             transform: translateY(-2px);
         }
+
         .tool-card:active {
             transform: scale(0.95);
         }
 
         /* Canvas */
         canvas {
-            touch-action: none; /* Very Important for mobile gestures */
+            touch-action: none;
+            /* Very Important for mobile gestures */
             width: 100%;
             height: 100%;
         }
 
-        .modal-bg { background: rgba(20, 20, 30, 0.85); backdrop-filter: blur(4px); }
+        .modal-bg {
+            background: rgba(20, 20, 30, 0.85);
+            backdrop-filter: blur(4px);
+        }
     </style>
 </head>
+
 <body class="flex flex-col h-full">
 
     <div class="hud-panel flex justify-between items-center p-3 z-20 absolute top-0 w-full">
@@ -109,42 +121,49 @@
             </div>
         </div>
 
-        <button onclick="document.getElementById('instructionsModal').classList.remove('hidden')" class="bg-gray-100 p-2 rounded-lg text-gray-600 hover:bg-gray-200">
+        <button onclick="document.getElementById('instructionsModal').classList.remove('hidden')"
+            class="bg-gray-100 p-2 rounded-lg text-gray-600 hover:bg-gray-200">
             <i class="fas fa-bars"></i>
         </button>
     </div>
 
     <div class="flex-1 relative overflow-hidden bg-[#eef2ff] w-full h-full">
         <canvas id="gameCanvas"></canvas>
-        
-        <div id="toast-container" class="absolute top-20 left-1/2 transform -translate-x-1/2 flex flex-col items-center pointer-events-none z-10 w-full px-4"></div>
 
-        <button onclick="resetCamera()" class="absolute bottom-4 right-4 bg-white p-3 rounded-full shadow-lg text-[#3F51B5] border border-gray-100 active:scale-90 transition z-10">
+        <div id="toast-container"
+            class="absolute top-20 left-1/2 transform -translate-x-1/2 flex flex-col items-center pointer-events-none z-10 w-full px-4">
+        </div>
+
+        <button onclick="resetCamera()"
+            class="absolute bottom-4 right-4 bg-white p-3 rounded-full shadow-lg text-[#3F51B5] border border-gray-100 active:scale-90 transition z-10">
             <i class="fas fa-crosshairs"></i>
         </button>
     </div>
 
     <div class="controls-dock z-20 flex flex-col">
-        
+
         <div class="bg-[#3F51B5] text-white text-xs font-bold py-1 px-4 text-center tracking-wide" id="info-bar">
             Select a tool to start building...
         </div>
 
         <div class="flex p-3 gap-3 overflow-x-auto scroller items-center no-scrollbar">
-            
+
             <div id="tool-move" class="tool-card active min-w-[60px]" onclick="setMode('MOVE')">
                 <i class="fas fa-hand-paper text-gray-500 text-xl mb-1"></i>
                 <span class="text-[10px] font-bold text-gray-500">MOVE</span>
             </div>
 
-            <div class="w-[1px] h-10 bg-gray-200 mx-1"></div> <div id="tools-container" class="flex gap-2"></div>
+            <div class="w-[1px] h-10 bg-gray-200 mx-1"></div>
+            <div id="tools-container" class="flex gap-2"></div>
         </div>
 
         <div class="grid grid-cols-2 gap-0 border-t border-gray-200">
-            <button onclick="setMode('DELETE')" class="py-4 bg-red-50 text-[#FF5A5E] font-bold hover:bg-red-100 transition flex items-center justify-center gap-2">
+            <button onclick="setMode('DELETE')"
+                class="py-4 bg-red-50 text-[#FF5A5E] font-bold hover:bg-red-100 transition flex items-center justify-center gap-2">
                 <i class="fas fa-trash-alt"></i> DEMOLISH
             </button>
-            <button id="btn-next-turn" class="py-4 bg-[#6A1B9A] text-white font-bold hover:bg-[#4a148c] transition flex items-center justify-center gap-2">
+            <button id="btn-next-turn"
+                class="py-4 bg-[#6A1B9A] text-white font-bold hover:bg-[#4a148c] transition flex items-center justify-center gap-2">
                 NEXT WEEK <span id="turn-display" class="bg-white/20 px-2 rounded text-xs">1</span>
             </button>
         </div>
@@ -157,9 +176,10 @@
             </div>
             <h2 class="text-2xl font-black text-[#1f2937] mb-1">Welcome!</h2>
             <p class="text-gray-400 text-sm mb-6">Create your dream isometric city.</p>
-            
-            <input type="text" id="loginId" placeholder="City Name (e.g. Mumbai)" class="w-full bg-gray-50 border-2 border-gray-100 text-gray-800 p-3 rounded-xl mb-4 text-center font-bold focus:border-[#3F51B5] outline-none">
-            
+
+            <input type="text" id="loginId" placeholder="City Name (e.g. Mumbai)"
+                class="w-full bg-gray-50 border-2 border-gray-100 text-gray-800 p-3 rounded-xl mb-4 text-center font-bold focus:border-[#3F51B5] outline-none">
+
             <button id="btnStart" class="btn-action w-full bg-[#3F51B5] text-white font-bold py-3 rounded-xl mb-3">
                 START PLAYING
             </button>
@@ -171,44 +191,48 @@
         <div class="bg-white rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl">
             <div class="flex justify-between items-center mb-4 border-b pb-2">
                 <h3 class="font-bold text-lg text-[#6A1B9A]">Game Guide</h3>
-                <button onclick="document.getElementById('instructionsModal').classList.add('hidden')" class="text-gray-400 text-xl">&times;</button>
+                <button onclick="document.getElementById('instructionsModal').classList.add('hidden')"
+                    class="text-gray-400 text-xl">&times;</button>
             </div>
-            
+
             <div class="space-y-3 text-sm text-gray-600 mb-6">
                 <div class="flex gap-3 items-center">
-                    <div class="w-8 h-8 rounded bg-gray-100 flex items-center justify-center"><i class="fas fa-hand-paper text-gray-500"></i></div>
+                    <div class="w-8 h-8 rounded bg-gray-100 flex items-center justify-center"><i
+                            class="fas fa-hand-paper text-gray-500"></i></div>
                     <p><strong>Move Mode:</strong> Drag map to look around.</p>
                 </div>
                 <div class="flex gap-3 items-center">
-                    <div class="w-8 h-8 rounded bg-[#eef2ff] flex items-center justify-center"><i class="fas fa-home text-[#3F51B5]"></i></div>
+                    <div class="w-8 h-8 rounded bg-[#eef2ff] flex items-center justify-center"><i
+                            class="fas fa-home text-[#3F51B5]"></i></div>
                     <p><strong>Build Mode:</strong> Tap on the grid to build.</p>
                 </div>
                 <div class="flex gap-3 items-center">
-                    <div class="w-8 h-8 rounded bg-purple-50 flex items-center justify-center"><i class="fas fa-forward text-[#6A1B9A]"></i></div>
+                    <div class="w-8 h-8 rounded bg-purple-50 flex items-center justify-center"><i
+                            class="fas fa-forward text-[#6A1B9A]"></i></div>
                     <p><strong>Next Week:</strong> Collect money & grow pop.</p>
                 </div>
             </div>
 
-            <button onclick="document.getElementById('instructionsModal').classList.add('hidden')" class="w-full bg-[#3F51B5] text-white font-bold py-3 rounded-xl">GOT IT</button>
+            <button onclick="document.getElementById('instructionsModal').classList.add('hidden')"
+                class="w-full bg-[#3F51B5] text-white font-bold py-3 rounded-xl">GOT IT</button>
         </div>
     </div>
-
     <script type="module">
         // ** CONFIGURATION **
         const TILE_WIDTH = 64;
         const TILE_HEIGHT = 32;
-        const MAP_SIZE = 20; // Keep map size manageable for performance
+        const MAP_SIZE = 20;
 
-        // ** ASSETS (Your vibrant palette) **
+        // ** ASSETS **
         const ASSETS = {
-            road:     { name: 'Road',     icon: 'fa-road',         cost: 20,    color: '#9CA3AF', height: 2,  type: 'deco', desc: 'Connects places' },
-            house:    { name: 'House',    icon: 'fa-home',         cost: 100,   color: '#F8BBD0', height: 12, type: 'res', pop: 4, income: 5, desc: '+4 Pop | +₹5 Income' },
-            apt:      { name: 'Apts',     icon: 'fa-building',     cost: 300,   color: '#3F51B5', height: 30, type: 'res', pop: 12, income: 20, desc: '+12 Pop | +₹20 Income' },
-            park:     { name: 'Park',     icon: 'fa-tree',         cost: 150,   color: '#4ade80', height: 6,  type: 'deco', happy: 10, desc: '+10 Happiness' },
-            power:    { name: 'Power',    icon: 'fa-bolt',         cost: 500,   color: '#FF5A5E', height: 18, type: 'util', power: 40, desc: 'Provides Electricity' },
-            water:    { name: 'Water',    icon: 'fa-tint',         cost: 400,   color: '#7C4DFF', height: 20, type: 'util', water: 40, desc: 'Provides Water' },
-            factory:  { name: 'Factory',  icon: 'fa-industry',     cost: 1000,  color: '#6A1B9A', height: 25, type: 'ind', income: 80, happy: -10, desc: '+₹80 Income | -10 Happy' },
-            mall:     { name: 'Mall',     icon: 'fa-shopping-bag', cost: 2000,  color: '#FF80AB', height: 40, type: 'com', income: 150, happy: 5, desc: '+₹150 Income | +5 Happy' },
+            road: { name: 'Road', icon: 'fa-road', cost: 20, color: '#9CA3AF', height: 2, type: 'deco', desc: 'Connects places' },
+            house: { name: 'House', icon: 'fa-home', cost: 100, color: '#F8BBD0', height: 12, type: 'res', pop: 4, income: 5, desc: '+4 Pop | +₹5 Income' },
+            apt: { name: 'Apts', icon: 'fa-building', cost: 300, color: '#3F51B5', height: 30, type: 'res', pop: 12, income: 20, desc: '+12 Pop | +₹20 Income' },
+            park: { name: 'Park', icon: 'fa-tree', cost: 150, color: '#4ade80', height: 6, type: 'deco', happy: 10, desc: '+10 Happiness' },
+            power: { name: 'Power', icon: 'fa-bolt', cost: 500, color: '#FF5A5E', height: 18, type: 'util', power: 40, desc: 'Provides Electricity' },
+            water: { name: 'Water', icon: 'fa-tint', cost: 400, color: '#7C4DFF', height: 20, type: 'util', water: 40, desc: 'Provides Water' },
+            factory: { name: 'Factory', icon: 'fa-industry', cost: 1000, color: '#6A1B9A', height: 25, type: 'ind', income: 80, happy: -10, desc: '+₹80 Income | -10 Happy' },
+            mall: { name: 'Mall', icon: 'fa-shopping-bag', cost: 2000, color: '#FF80AB', height: 40, type: 'com', income: 150, happy: 5, desc: '+₹150 Income | +5 Happy' },
         };
 
         // ** STATE **
@@ -218,54 +242,64 @@
             happiness: 50,
             turn: 1,
             grid: [],
-            camera: { x: 0, y: 0 } // Will center on init
+            camera: { x: 500, y: 100 } // Default values to prevent blank screen
         };
 
-        let interactionMode = 'MOVE'; // 'MOVE', 'BUILD', 'DELETE'
+        let interactionMode = 'MOVE';
         let selectedTool = null;
         let isDragging = false;
         let lastTouch = { x: 0, y: 0 };
         let gameId = 'guest';
 
-        // ** INIT **
+        // ** INIT CANVAS **
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d', { alpha: false });
 
-        // Auto-Resize Canvas
+        // Robust Resize Function
         function resize() {
-            canvas.width = canvas.parentElement.clientWidth;
-            canvas.height = canvas.parentElement.clientHeight;
+            const parent = canvas.parentElement;
+            if (parent) {
+                canvas.width = parent.clientWidth;
+                canvas.height = parent.clientHeight;
+                // Recenter if camera is at 0,0
+                if (state.camera.x === 0 || state.camera.x === 500) {
+                    state.camera.x = canvas.width / 2;
+                    state.camera.y = 150; // Push it down a bit
+                }
+            }
         }
         window.addEventListener('resize', resize);
-        resize();
 
+        // ** GAME START LOGIC **
         function initGame(isNew) {
-            // Close modal
             document.getElementById('loginModal').style.display = 'none';
+
+            // Fix: Force resize calculation instantly
             resize();
 
-            // Setup Camera (Center it)
-            state.camera.x = canvas.width / 2;
-            state.camera.y = 100;
+            // Double Fix: Wait 100ms for layout to settle then resize again
+            setTimeout(() => {
+                resize();
+                state.camera.x = canvas.width / 2;
+            }, 100);
 
-            if(isNew) {
-                // Generate clean grid
+            if (isNew) {
                 state.grid = Array(MAP_SIZE).fill().map(() => Array(MAP_SIZE).fill(null));
-                // Add center starting road
-                const mid = Math.floor(MAP_SIZE/2);
-                state.grid[mid][mid] = { type: 'house', height: 12 }; // Free house
+                const mid = Math.floor(MAP_SIZE / 2);
+                // Starting items to make map visible
+                state.grid[mid][mid] = { type: 'house', height: 12 };
+                state.grid[mid + 1][mid] = { type: 'road', height: 2 };
+                state.grid[mid][mid + 1] = { type: 'road', height: 2 };
                 state.money = 5000;
-                showToast("Welcome! Try moving the map.", "bg-green-100 text-green-800");
             } else {
                 loadGame();
-                showToast("City Loaded.", "bg-blue-100 text-blue-800");
             }
 
             updateUI();
             requestAnimationFrame(renderLoop);
         }
 
-        // ** ISO MATH **
+        // ** DRAWING SYSTEM **
         function isoToScreen(x, y) {
             return {
                 x: (x - y) * TILE_WIDTH * 0.5 + state.camera.x,
@@ -281,312 +315,215 @@
             return { x: Math.floor(gx), y: Math.floor(gy) };
         }
 
-        // ** RENDER LOOP **
         function renderLoop() {
-            draw();
-            requestAnimationFrame(renderLoop);
-        }
-
-        function draw() {
-            // Clear Background
-            ctx.fillStyle = '#eef2ff'; 
+            // Clear Screen
+            ctx.fillStyle = '#eef2ff';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            if(!state.grid || !state.grid.length) return;
+            // Safety Check
+            if (!state.grid || !state.grid.length) {
+                requestAnimationFrame(renderLoop);
+                return;
+            }
 
-            // Render Tiles (Back to Front)
+            // Render Map
             for (let x = 0; x < MAP_SIZE; x++) {
                 for (let y = 0; y < MAP_SIZE; y++) {
                     const pos = isoToScreen(x, y);
-                    
-                    // Simple Culling
-                    if(pos.x < -100 || pos.x > canvas.width + 100 || pos.y < -100 || pos.y > canvas.height + 100) continue;
 
-                    // 1. Draw Ground
+                    // Optimized Culling (Don't draw if off screen)
+                    if (pos.x < -100 || pos.x > canvas.width + 100 || pos.y < -100 || pos.y > canvas.height + 100) continue;
+
+                    // 1. Ground
                     ctx.beginPath();
                     ctx.moveTo(pos.x, pos.y);
-                    ctx.lineTo(pos.x + TILE_WIDTH/2, pos.y + TILE_HEIGHT/2);
+                    ctx.lineTo(pos.x + TILE_WIDTH / 2, pos.y + TILE_HEIGHT / 2);
                     ctx.lineTo(pos.x, pos.y + TILE_HEIGHT);
-                    ctx.lineTo(pos.x - TILE_WIDTH/2, pos.y + TILE_HEIGHT/2);
+                    ctx.lineTo(pos.x - TILE_WIDTH / 2, pos.y + TILE_HEIGHT / 2);
                     ctx.closePath();
-                    
-                    // Checkerboard
-                    ctx.fillStyle = (x+y)%2===0 ? '#E0E7FF' : '#C5CAE9';
+                    ctx.fillStyle = (x + y) % 2 === 0 ? '#E0E7FF' : '#C5CAE9';
                     ctx.fill();
 
-                    // 2. Draw Building or Ghost
+                    // 2. Objects
                     const cell = state.grid[x][y];
-                    
-                    if(cell) {
+                    if (cell) {
                         const asset = ASSETS[cell.type];
-                        if(asset) drawBlock(pos.x, pos.y, asset.color, asset.height);
+                        if (asset) drawBlock(pos.x, pos.y, asset.color, asset.height);
                     }
                 }
             }
+            requestAnimationFrame(renderLoop);
         }
 
         function drawBlock(ox, oy, color, height) {
             const topY = oy - height;
-            
-            // Right Face
-            ctx.fillStyle = adjustColor(color, -40);
-            ctx.beginPath();
-            ctx.moveTo(ox, oy + TILE_HEIGHT);
-            ctx.lineTo(ox + TILE_WIDTH/2, oy + TILE_HEIGHT/2);
-            ctx.lineTo(ox + TILE_WIDTH/2, topY + TILE_HEIGHT/2);
-            ctx.lineTo(ox, topY + TILE_HEIGHT);
-            ctx.fill();
+            // Faces
+            ctx.fillStyle = adjustColor(color, -40); // Right
+            ctx.beginPath(); ctx.moveTo(ox, oy + TILE_HEIGHT); ctx.lineTo(ox + TILE_WIDTH / 2, oy + TILE_HEIGHT / 2); ctx.lineTo(ox + TILE_WIDTH / 2, topY + TILE_HEIGHT / 2); ctx.lineTo(ox, topY + TILE_HEIGHT); ctx.fill();
 
-            // Left Face
-            ctx.fillStyle = adjustColor(color, -20);
-            ctx.beginPath();
-            ctx.moveTo(ox, oy + TILE_HEIGHT);
-            ctx.lineTo(ox - TILE_WIDTH/2, oy + TILE_HEIGHT/2);
-            ctx.lineTo(ox - TILE_WIDTH/2, topY + TILE_HEIGHT/2);
-            ctx.lineTo(ox, topY + TILE_HEIGHT);
-            ctx.fill();
+            ctx.fillStyle = adjustColor(color, -20); // Left
+            ctx.beginPath(); ctx.moveTo(ox, oy + TILE_HEIGHT); ctx.lineTo(ox - TILE_WIDTH / 2, oy + TILE_HEIGHT / 2); ctx.lineTo(ox - TILE_WIDTH / 2, topY + TILE_HEIGHT / 2); ctx.lineTo(ox, topY + TILE_HEIGHT); ctx.fill();
 
-            // Top Face
-            ctx.fillStyle = color;
-            ctx.beginPath();
-            ctx.moveTo(ox, topY);
-            ctx.lineTo(ox + TILE_WIDTH/2, topY + TILE_HEIGHT/2);
-            ctx.lineTo(ox, topY + TILE_HEIGHT);
-            ctx.lineTo(ox - TILE_WIDTH/2, topY + TILE_HEIGHT/2);
-            ctx.fill();
-            
-            // Edge
-            ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-            ctx.lineWidth = 1;
-            ctx.stroke();
+            ctx.fillStyle = color; // Top
+            ctx.beginPath(); ctx.moveTo(ox, topY); ctx.lineTo(ox + TILE_WIDTH / 2, topY + TILE_HEIGHT / 2); ctx.lineTo(ox, topY + TILE_HEIGHT); ctx.lineTo(ox - TILE_WIDTH / 2, topY + TILE_HEIGHT / 2); ctx.fill();
+
+            ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 1; ctx.stroke();
         }
 
-        // ** INPUT HANDLING (Crucial for "Easy Controls") **
-
-        // Helper to get coordinates
+        // ** CONTROLS **
         function getCoords(e) {
             const rect = canvas.getBoundingClientRect();
-            if(e.touches) {
-                return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
-            }
-            return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return { x: clientX - rect.left, y: clientY - rect.top };
         }
 
-        // Touch/Mouse Start
         function onStart(e) {
-            const coords = getCoords(e);
             isDragging = true;
-            lastTouch = coords;
+            lastTouch = getCoords(e);
         }
 
-        // Touch/Mouse Move
         function onMove(e) {
-            if(!isDragging) return;
-            e.preventDefault(); // Stop scrolling the page
-            
+            if (!isDragging) return;
             const coords = getCoords(e);
-            
             if (interactionMode === 'MOVE') {
-                // Pan Camera
-                const dx = coords.x - lastTouch.x;
-                const dy = coords.y - lastTouch.y;
-                state.camera.x += dx;
-                state.camera.y += dy;
+                state.camera.x += (coords.x - lastTouch.x);
+                state.camera.y += (coords.y - lastTouch.y);
             }
             lastTouch = coords;
         }
 
-        // Touch/Mouse End (Click logic)
         function onEnd(e) {
             isDragging = false;
-            
-            // If it was a short tap/click (not a long drag), treat as Interaction
-            // (Simplified logic: always try to build if in BUILD mode)
             if (interactionMode !== 'MOVE') {
-                // Need current mouse pos for click, but touchend doesn't give it.
-                // Using last known pos.
+                // Use last known touch position for click
                 const gridPos = screenToIso(lastTouch.x, lastTouch.y);
                 handleGridClick(gridPos.x, gridPos.y);
             }
         }
 
+        // Bind Events
         canvas.addEventListener('mousedown', onStart);
         canvas.addEventListener('mousemove', onMove);
         canvas.addEventListener('mouseup', onEnd);
-        
-        canvas.addEventListener('touchstart', onStart, {passive: false});
-        canvas.addEventListener('touchmove', onMove, {passive: false});
+        canvas.addEventListener('touchstart', onStart, { passive: true }); // Optimized for scroll
+        canvas.addEventListener('touchmove', (e) => {
+            if (interactionMode === 'MOVE') e.preventDefault();
+            onMove(e);
+        }, { passive: false });
         canvas.addEventListener('touchend', onEnd);
 
-
-        // ** GAME LOGIC **
+        // ** LOGIC **
         function handleGridClick(x, y) {
             if (x < 0 || x >= MAP_SIZE || y < 0 || y >= MAP_SIZE) return;
 
-            // DELETE MODE
-            if (interactionMode === 'DELETE') {
-                if (state.grid[x][y]) {
-                    state.grid[x][y] = null;
-                    state.money += 25;
-                    showToast("Deleted! +₹25 Refund", "bg-red-100 text-red-700");
-                    updateUI();
-                    saveGame();
-                }
-                return;
-            }
-
-            // BUILD MODE
-            if (interactionMode === 'BUILD' && selectedTool) {
-                if (state.grid[x][y]) {
-                    showToast("Can't build here!", "bg-gray-200 text-gray-600");
-                    return;
-                }
-                
+            if (interactionMode === 'DELETE' && state.grid[x][y]) {
+                state.grid[x][y] = null;
+                state.money += 25;
+                showToast("Demolished!", "text-red-600");
+            } else if (interactionMode === 'BUILD' && selectedTool && !state.grid[x][y]) {
                 const asset = ASSETS[selectedTool];
                 if (state.money >= asset.cost) {
                     state.money -= asset.cost;
                     state.grid[x][y] = { type: selectedTool, height: asset.height };
-                    showToast(`Built ${asset.name}! -₹${asset.cost}`, "bg-[#eef2ff] text-[#3F51B5]");
-                    updateUI();
-                    saveGame();
+                    showToast(`Built ${asset.name}`, "text-blue-600");
                 } else {
-                    showToast("Not enough money!", "bg-red-100 text-red-700");
+                    showToast("Need more Funds!", "text-red-600");
                 }
             }
+            updateUI();
+            saveGame();
         }
 
         function nextTurn() {
+            // Simple Income Logic
             let income = 0;
-            let happySum = 0;
-            let count = 0;
-            let pop = 0;
+            for (let row of state.grid) for (let c of row) if (c && ASSETS[c.type].income) income += ASSETS[c.type].income;
 
-            for(let x=0; x<MAP_SIZE; x++) {
-                for(let y=0; y<MAP_SIZE; y++) {
-                    const cell = state.grid[x][y];
-                    if(cell) {
-                        const a = ASSETS[cell.type];
-                        if(a) {
-                            if(a.income) income += a.income;
-                            if(a.happy) happySum += a.happy;
-                            if(a.pop) pop += a.pop;
-                            count++;
-                        }
-                    }
-                }
-            }
-
-            let happy = 50 + (happySum);
-            happy = Math.min(100, Math.max(0, happy));
-            
-            // Income modifier
-            let modifier = happy > 80 ? 1.5 : 1.0;
-            income = Math.floor(income * modifier);
-
-            state.money += income;
-            state.pop = pop;
+            state.money += Math.max(50, income); // Minimum 50 income
             state.turn++;
-            
             updateUI();
             saveGame();
-            showToast(`Week ${state.turn}: Collected ₹${income}`, "bg-green-100 text-green-800");
+            showToast(`Week ${state.turn}: +₹${state.money}`, "text-green-600");
         }
 
-        // ** UI FUNCTIONS **
-        window.setMode = function(mode, toolKey) {
+        // ** UI HELPERS **
+        window.setMode = (mode, key) => {
             interactionMode = mode;
-            selectedTool = toolKey || null;
-
-            // Reset UI Visuals
+            selectedTool = key;
             document.querySelectorAll('.tool-card').forEach(el => el.classList.remove('active'));
             document.getElementById('tool-move').classList.remove('active');
+
             const infoBar = document.getElementById('info-bar');
 
             if (mode === 'MOVE') {
                 document.getElementById('tool-move').classList.add('active');
-                infoBar.style.backgroundColor = '#6b7280'; // Gray
-                infoBar.innerText = "Drag the screen to move the map";
-            } else if (mode === 'DELETE') {
-                infoBar.style.backgroundColor = '#ef4444'; // Red
-                infoBar.innerText = "Tap on a building to remove it";
+                infoBar.style.background = '#6b7280';
+                infoBar.innerText = "Drag to Move Map";
             } else if (mode === 'BUILD') {
-                // Activate tool card
-                document.getElementById('btn-'+toolKey).classList.add('active');
-                const asset = ASSETS[toolKey];
-                infoBar.style.backgroundColor = asset.color; // Match building color
-                infoBar.innerText = `${asset.name}: ${asset.desc} (Cost: ₹${asset.cost})`;
+                document.getElementById('btn-' + key).classList.add('active');
+                infoBar.style.background = ASSETS[key].color;
+                infoBar.innerText = `${ASSETS[key].name}: ${ASSETS[key].desc}`;
+            } else {
+                infoBar.style.background = '#ef4444';
+                infoBar.innerText = "Tap to Demolish";
             }
         };
 
-        window.resetCamera = function() {
+        window.resetCamera = () => {
             state.camera.x = canvas.width / 2;
-            state.camera.y = 100;
+            state.camera.y = 150;
         };
 
         function updateUI() {
             document.getElementById('ui-money').innerText = state.money.toLocaleString();
-            document.getElementById('ui-pop').innerText = state.pop;
             document.getElementById('turn-display').innerText = state.turn;
         }
 
         function showToast(msg, classes) {
-            const box = document.createElement('div');
-            box.className = `py-2 px-4 rounded-full shadow-md text-sm font-bold mb-2 animate-bounce ${classes}`;
-            box.innerText = msg;
-            document.getElementById('toast-container').appendChild(box);
-            setTimeout(() => box.remove(), 2500);
+            const el = document.createElement('div');
+            el.className = `bg-white py-2 px-4 rounded-full shadow-lg font-bold mb-2 animate-bounce ${classes}`;
+            el.innerText = msg;
+            document.getElementById('toast-container').appendChild(el);
+            setTimeout(() => el.remove(), 2000);
         }
 
-        function adjustColor(color, amount) {
-            return '#' + color.replace(/^#/, '').replace(/../g, color => ('0'+Math.min(255, Math.max(0, parseInt(color, 16) + amount)).toString(16)).substr(-2));
+        function adjustColor(c, amt) {
+            return '#' + c.replace(/^#/, '').replace(/../g, c => ('0' + Math.min(255, Math.max(0, parseInt(c, 16) + amt)).toString(16)).substr(-2));
         }
 
-        // Save/Load
         function saveGame() {
-            const data = JSON.stringify({
-                money: state.money, pop: state.pop, turn: state.turn, grid: state.grid
-            });
-            localStorage.setItem('easyCity_' + gameId, data);
+            localStorage.setItem('cityEasy_' + gameId, JSON.stringify(state));
         }
 
         function loadGame() {
-            const data = localStorage.getItem('easyCity_' + gameId);
-            if(data) {
-                const parsed = JSON.parse(data);
-                state.money = parsed.money;
-                state.pop = parsed.pop;
-                state.turn = parsed.turn;
-                state.grid = parsed.grid;
-            }
+            const data = localStorage.getItem('cityEasy_' + gameId);
+            if (data) state = JSON.parse(data);
         }
 
-        // ** GENERATE TOOLBAR **
+        // ** SETUP **
+        // Generate Toolbar
         const container = document.getElementById('tools-container');
         Object.keys(ASSETS).forEach(key => {
             const a = ASSETS[key];
-            const div = document.createElement('div');
-            div.id = `btn-${key}`;
-            div.className = 'tool-card';
-            div.innerHTML = `
-                <i class="fas ${a.icon} text-xl mb-1" style="color: ${a.color}"></i>
-                <span class="text-[9px] font-bold text-gray-500 uppercase">${a.name}</span>
-                <span class="text-[9px] font-bold text-gray-400">₹${a.cost}</span>
-            `;
-            div.onclick = () => setMode('BUILD', key);
-            container.appendChild(div);
+            const d = document.createElement('div');
+            d.id = 'btn-' + key;
+            d.className = 'tool-card flex flex-col items-center justify-center min-w-[60px] h-[60px] rounded-xl bg-white border-2 border-transparent';
+            d.innerHTML = `<i class="fas ${a.icon} text-xl" style="color:${a.color}"></i><span class="text-[9px] font-bold text-gray-500 mt-1">${a.name}</span><span class="text-[9px] font-bold text-gray-400">₹${a.cost}</span>`;
+            d.onclick = () => setMode('BUILD', key);
+            container.appendChild(d);
         });
 
-        // ** STARTUP EVENTS **
-        document.getElementById('btnStart').onclick = () => {
-            gameId = document.getElementById('loginId').value || 'guest';
-            initGame(true);
-        };
-        document.getElementById('btnLoad').onclick = () => {
-            gameId = document.getElementById('loginId').value || 'guest';
-            initGame(false);
-        };
+        document.getElementById('btnStart').onclick = () => { gameId = document.getElementById('loginId').value || 'guest'; initGame(true); };
+        document.getElementById('btnLoad').onclick = () => { gameId = document.getElementById('loginId').value || 'guest'; initGame(false); };
         document.getElementById('btn-next-turn').onclick = nextTurn;
+
+        // Auto start check
+        window.onload = () => {
+            resize();
+        }
 
     </script>
 </body>
+
 </html>
