@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CityBuilder 3D - Vibrant Edition</title>
+    <title>CityBuilder 3D - Fixed</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3909676898216763" crossorigin="anonymous"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -25,9 +25,10 @@
             color: #1f2937;
             height: 100vh;
             overflow: hidden;
+            touch-action: none; /* Prevent scroll on mobile */
         }
 
-        /* Glassmorphism Sidebar */
+        /* Sidebar */
         .sidebar {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
@@ -36,34 +37,29 @@
             z-index: 20;
         }
 
-        /* Game Container */
+        /* Game Wrapper */
         .game-wrapper {
             background: #eef2ff; 
-            /* Subtle Pattern */
             background-image: radial-gradient(#c7d2fe 1px, transparent 1px);
             background-size: 24px 24px;
             position: relative;
             overflow: hidden;
+            width: 100%;
+            height: 100%;
         }
 
-        /* Canvas */
         canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
             cursor: grab;
         }
-        canvas:active {
-            cursor: grabbing;
-        }
+        canvas:active { cursor: grabbing; }
 
-        /* 3D Buttons */
+        /* Buttons */
         .btn-tool {
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            top: 0;
+            transition: all 0.2s;
             border-bottom: 4px solid rgba(0,0,0,0.1);
-        }
-        .btn-tool:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
         .btn-tool:active, .btn-tool.active {
             transform: translateY(2px);
@@ -71,8 +67,6 @@
             margin-top: 4px; 
             box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
         }
-        
-        /* Active State with Indigo Theme */
         .btn-tool.active {
             background-color: #e0e7ff;
             border-color: var(--c-indigo);
@@ -80,177 +74,241 @@
             box-shadow: inset 0 0 0 1px var(--c-indigo);
         }
 
-        /* Modal */
         .modal-overlay {
-            background: rgba(30, 30, 50, 0.85); /* Darker overlay for contrast */
-            backdrop-filter: blur(4px);
+            background: rgba(30, 30, 50, 0.9);
+            backdrop-filter: blur(5px);
         }
     </style>
 </head>
 <body class="flex flex-col md:flex-row h-screen w-screen overflow-hidden">
 
-    <aside class="sidebar w-full md:w-80 flex flex-col h-1/3 md:h-full transition-all duration-300 flex-shrink-0">
-        <div class="p-5 border-b border-gray-100 bg-white">
-            <h1 class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#3F51B5] to-[#7C4DFF]">
+    <aside class="sidebar w-full md:w-80 flex flex-col h-1/3 md:h-full transition-all duration-300 flex-shrink-0 order-2 md:order-1">
+        <div class="p-4 border-b border-gray-100 bg-white flex justify-between items-center md:block">
+            <h1 class="text-xl md:text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#3F51B5] to-[#7C4DFF]">
                 <i class="fas fa-cube mr-2"></i>CityBuilder
             </h1>
-            <div class="flex justify-between items-center mt-2 text-sm text-gray-500">
-                <span id="user-display" class="font-bold text-[#6A1B9A]">Guest</span>
-                <span class="bg-[#F8BBD0] text-[#880E4F] px-2 py-0.5 rounded-full text-xs font-bold">Beta</span>
+            <div class="text-xs font-bold text-[#6A1B9A] mt-1">
+                User: <span id="user-display">Guest</span>
             </div>
         </div>
 
-        <div class="flex-1 overflow-y-auto p-4 space-y-4 scroller">
-            
-            <div class="grid grid-cols-2 gap-3 mb-4">
-                <button id="btn-next-turn" class="btn-tool bg-[#3F51B5] text-white rounded-xl p-3 flex flex-col items-center justify-center border-[#283593] hover:bg-[#303F9F]">
-                    <span class="text-xs opacity-80 font-bold uppercase tracking-wider">Next Week</span>
-                    <span class="text-xl font-black" id="turn-display">Wk 1</span>
-                </button>
-                <button onclick="openHelp()" class="btn-tool bg-[#FF80AB] text-white rounded-xl p-3 flex flex-col items-center justify-center border-[#C2185B] hover:bg-[#F06292]">
-                    <i class="fas fa-info-circle text-xl mb-1"></i>
-                    <span class="text-xs font-bold">Info</span>
-                </button>
-            </div>
-
-            <div class="grid grid-cols-2 gap-2 bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
+        <div class="flex-1 overflow-y-auto p-3 space-y-3 scroller">
+            <div class="grid grid-cols-2 gap-2 bg-white p-2 rounded-xl border border-gray-200 shadow-sm">
                 <div class="text-center">
-                    <div class="text-[10px] text-gray-400 font-bold uppercase">Budget</div>
+                    <div class="text-[10px] text-gray-400 font-bold uppercase">Funds</div>
                     <div class="font-black text-[#6A1B9A] text-lg">₹<span id="ui-money">0</span></div>
                 </div>
                 <div class="text-center">
-                    <div class="text-[10px] text-gray-400 font-bold uppercase">Citizens</div>
+                    <div class="text-[10px] text-gray-400 font-bold uppercase">Pop</div>
                     <div class="font-black text-[#3F51B5] text-lg" id="ui-pop">0</div>
                 </div>
-                <div class="text-center border-t pt-2 col-span-2 flex justify-around">
-                    <div>
-                        <span class="text-gray-400 text-xs"><i class="fas fa-smile text-[#FF5A5E]"></i></span>
-                        <span class="font-bold text-gray-700"><span id="ui-happy">50</span>%</span>
-                    </div>
-                    <div>
-                         <span class="text-gray-400 text-xs"><i class="fas fa-bolt text-[#FF5A5E]"></i></span>
-                         <span class="font-bold text-gray-700" id="ui-power">Ok</span>
-                    </div>
-                    <div>
-                         <span class="text-gray-400 text-xs"><i class="fas fa-tint text-[#7C4DFF]"></i></span>
-                         <span class="font-bold text-gray-700" id="ui-water">Ok</span>
-                    </div>
+                <div class="text-center border-t pt-1 col-span-2 flex justify-around text-xs">
+                    <div><i class="fas fa-smile text-[#FF5A5E]"></i> <span id="ui-happy" class="font-bold">50</span>%</div>
+                    <div><i class="fas fa-bolt text-[#FF5A5E]"></i> <span id="ui-power" class="font-bold">Ok</span></div>
+                    <div><i class="fas fa-tint text-[#7C4DFF]"></i> <span id="ui-water" class="font-bold">Ok</span></div>
                 </div>
             </div>
 
+            <div class="grid grid-cols-2 gap-2">
+                <button id="btn-next-turn" class="btn-tool bg-[#3F51B5] text-white rounded-lg p-3 border-[#283593] font-bold text-sm">
+                    Next Week <span id="turn-display" class="block text-xs opacity-70 font-normal">Wk 1</span>
+                </button>
+                <button onclick="document.getElementById('instructionsModal').classList.remove('hidden')" class="btn-tool bg-[#FF80AB] text-white rounded-lg p-3 border-[#C2185B] font-bold text-sm">
+                    <i class="fas fa-info-circle"></i> Info
+                </button>
+            </div>
+
             <div>
-                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 mt-2 pl-1">Build Menu</h3>
-                <div class="grid grid-cols-2 gap-3" id="tools-container">
-                    </div>
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 pl-1">Build</h3>
+                <div class="grid grid-cols-3 md:grid-cols-2 gap-2" id="tools-container"></div>
                 
-                <button onclick="setTool('DELETE')" class="btn-tool w-full mt-4 bg-gray-100 text-[#FF5A5E] border border-gray-200 rounded-xl p-3 flex items-center justify-center gap-2 border-b-4 hover:bg-white">
-                    <i class="fas fa-eraser"></i> <span class="font-bold">Demolish</span>
+                <button onclick="setTool('DELETE')" class="btn-tool w-full mt-3 bg-white text-[#FF5A5E] border border-gray-200 rounded-lg p-2 font-bold text-sm hover:bg-red-50">
+                    <i class="fas fa-eraser"></i> Demolish
                 </button>
             </div>
         </div>
     </aside>
 
-    <main class="game-wrapper flex-1 relative h-2/3 md:h-full w-full">
-        <canvas id="gameCanvas" class="block w-full h-full outline-none"></canvas>
-        <div id="toast-container" class="absolute top-4 left-1/2 transform -translate-x-1/2 flex flex-col gap-2 pointer-events-none w-full max-w-sm px-4"></div>
+    <main class="game-wrapper flex-1 relative h-2/3 md:h-full w-full order-1 md:order-2">
+        <canvas id="gameCanvas"></canvas>
         
-        <div class="absolute bottom-6 right-6 flex flex-col gap-2">
-            <button onclick="resetCamera()" class="bg-white p-3 rounded-full shadow-lg text-[#3F51B5] hover:scale-110 transition">
-                <i class="fas fa-crosshairs"></i>
+        <div id="toast-container" class="absolute top-10 left-1/2 transform -translate-x-1/2 flex flex-col gap-2 pointer-events-none w-full max-w-sm px-4 z-30"></div>
+        
+        <div class="absolute bottom-6 right-6 z-30">
+            <button onclick="resetCamera()" class="bg-white p-4 rounded-full shadow-xl text-[#3F51B5] hover:scale-110 transition border border-gray-100">
+                <i class="fas fa-crosshairs fa-lg"></i>
             </button>
         </div>
     </main>
 
     <div id="loginModal" class="modal-overlay fixed inset-0 flex items-center justify-center z-50">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-4 transform transition-all scale-100 border-t-8 border-[#7C4DFF]">
-            <div class="text-center mb-6">
-                <h2 class="text-3xl font-extrabold text-[#6A1B9A]">CityBuilder</h2>
-                <p class="text-[#FF80AB] font-bold text-sm tracking-wide">VIBRANT EDITION</p>
-            </div>
-            <input type="text" id="loginId" placeholder="City Name" class="w-full bg-gray-50 border-2 border-gray-100 text-gray-800 p-3 rounded-xl mb-4 focus:border-[#7C4DFF] focus:outline-none font-bold text-center">
-            <div class="space-y-3">
-                <button id="btnLogin" class="w-full bg-[#3F51B5] hover:bg-[#303F9F] text-white font-bold py-3 rounded-xl shadow-lg transition transform active:scale-95">Load City</button>
-                <button id="btnNew" class="w-full bg-white border-2 border-[#FF5A5E] text-[#FF5A5E] hover:bg-[#FFF0F5] font-bold py-3 rounded-xl transition transform active:scale-95">New City</button>
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-4 text-center border-t-8 border-[#7C4DFF]">
+            <h2 class="text-3xl font-extrabold text-[#6A1B9A] mb-1">CityBuilder</h2>
+            <p class="text-[#FF80AB] font-bold text-xs tracking-widest mb-6">VIBRANT EDITION</p>
+            
+            <input type="text" id="loginId" placeholder="Enter City Name" class="w-full bg-gray-50 border-2 border-gray-200 text-gray-800 p-3 rounded-xl mb-4 font-bold text-center focus:outline-none focus:border-[#7C4DFF]">
+            
+            <div class="grid grid-cols-2 gap-3">
+                <button id="btnLogin" class="btn-tool bg-[#3F51B5] text-white font-bold py-3 rounded-xl">Load</button>
+                <button id="btnNew" class="btn-tool bg-[#FF5A5E] text-white font-bold py-3 rounded-xl">New</button>
             </div>
         </div>
     </div>
 
     <div id="instructionsModal" class="modal-overlay fixed inset-0 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4">
-            <div class="flex justify-between items-center mb-4 border-b pb-2">
-                <h3 class="text-xl font-bold text-[#6A1B9A]">Quick Guide</h3>
-                <button onclick="document.getElementById('instructionsModal').classList.add('hidden')" class="text-gray-400 hover:text-[#FF5A5E]"><i class="fas fa-times text-xl"></i></button>
+        <div class="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-lg text-[#6A1B9A]">How to Play</h3>
+                <button onclick="this.closest('.fixed').classList.add('hidden')" class="text-gray-400 hover:text-red-500"><i class="fas fa-times"></i></button>
             </div>
-            <div class="space-y-2 text-sm text-gray-600">
-                <p><span class="text-[#FF5A5E] font-bold">● Power (Bittersweet):</span> Essential for all buildings.</p>
-                <p><span class="text-[#7C4DFF] font-bold">● Water (Slate Blue):</span> Required for housing.</p>
-                <p><span class="text-[#F8BBD0] font-bold">● Houses (Pale Pink):</span> Grow your population.</p>
-                <p><span class="text-[#6A1B9A] font-bold">● Industry (Violet):</span> Earns money but pollutes.</p>
-                <p><span class="text-[#FF80AB] font-bold">● Malls (Hot Pink):</span> Boost happiness & cash.</p>
-            </div>
-            <button onclick="document.getElementById('instructionsModal').classList.add('hidden')" class="mt-6 w-full bg-[#3F51B5] text-white font-bold py-3 rounded-xl">Play</button>
+            <ul class="text-sm space-y-2 text-gray-600 mb-4">
+                <li><i class="fas fa-mouse text-[#3F51B5]"></i> Click to Build, Right-Click Drag to Move.</li>
+                <li><i class="fas fa-bolt text-[#FF5A5E]"></i> Power is needed for everything.</li>
+                <li><i class="fas fa-home text-[#F8BBD0]"></i> Houses increase population.</li>
+                <li><i class="fas fa-industry text-[#6A1B9A]"></i> Factories make money.</li>
+            </ul>
+            <button onclick="this.closest('.fixed').classList.add('hidden')" class="w-full bg-[#3F51B5] text-white font-bold py-2 rounded-lg">Play!</button>
         </div>
     </div>
 
     <script type="module">
-        // --- CONFIG & ASSETS (Mapped to your colors) ---
+        // --- GAME CONSTANTS ---
         const TILE_WIDTH = 64;
         const TILE_HEIGHT = 32;
         const MAP_SIZE = 24;
-
-        // ** COLOR PALETTE APPLIED HERE **
         const ASSETS = {
-            road:     { name: 'Road',   icon: 'fa-road',         cost: 20,    color: '#9CA3AF', height: 2,  type: 'deco' }, // Gray (Neutral)
-            
-            house:    { name: 'House',  icon: 'fa-home',         cost: 100,   color: '#F8BBD0', height: 12, type: 'res', pop: 5, income: 5 }, // Pale Pink
-            
-            apt:      { name: 'Apts',   icon: 'fa-building',     cost: 300,   color: '#3F51B5', height: 30, type: 'res', pop: 15, income: 20 }, // Indigo
-            
-            park:     { name: 'Park',   icon: 'fa-tree',         cost: 150,   color: '#4ade80', height: 4,  type: 'deco', happy: 8 }, // Keep Green for logic (Nature)
-            
-            power:    { name: 'Power',  icon: 'fa-bolt',         cost: 500,   color: '#FF5A5E', height: 18, type: 'util', power: 40 }, // Bittersweet
-            
-            water:    { name: 'Water',  icon: 'fa-tint',         cost: 400,   color: '#7C4DFF', height: 20, type: 'util', water: 40 }, // Medium Slate Blue
-            
-            factory:  { name: 'Factory',icon: 'fa-industry',     cost: 1200,  color: '#6A1B9A', height: 22, type: 'ind', income: 80, happy: -8 }, // Dark Violet
-            
-            mall:     { name: 'Mall',   icon: 'fa-shopping-bag', cost: 2500,  color: '#FF80AB', height: 35, type: 'com', income: 150, happy: 5 }, // Hot Pink
+            road:     { name: 'Road',   icon: 'fa-road',         cost: 20,    color: '#9CA3AF', height: 2,  type: 'deco' },
+            house:    { name: 'House',  icon: 'fa-home',         cost: 100,   color: '#F8BBD0', height: 12, type: 'res', pop: 5, income: 5 },
+            apt:      { name: 'Apt',    icon: 'fa-building',     cost: 300,   color: '#3F51B5', height: 30, type: 'res', pop: 15, income: 20 },
+            park:     { name: 'Park',   icon: 'fa-tree',         cost: 150,   color: '#4ade80', height: 4,  type: 'deco', happy: 8 },
+            power:    { name: 'Power',  icon: 'fa-bolt',         cost: 500,   color: '#FF5A5E', height: 18, type: 'util', power: 40 },
+            water:    { name: 'Water',  icon: 'fa-tint',         cost: 400,   color: '#7C4DFF', height: 20, type: 'util', water: 40 },
+            factory:  { name: 'Factory',icon: 'fa-industry',     cost: 1200,  color: '#6A1B9A', height: 22, type: 'ind', income: 80, happy: -8 },
+            mall:     { name: 'Mall',   icon: 'fa-shopping-bag', cost: 2500,  color: '#FF80AB', height: 35, type: 'com', income: 150, happy: 5 },
         };
 
-        // --- State ---
-        let state = { money: 5000, pop: 0, happiness: 50, turn: 1, grid: [], camera: { x: 0, y: 100 } };
+        // --- GAME STATE ---
+        let state = {
+            money: 5000,
+            pop: 0,
+            happiness: 50,
+            turn: 1,
+            grid: [], // Will be initialized
+            camera: { x: 0, y: 150 }
+        };
+
         let selectedTool = null;
         let hoveredTile = { x: -1, y: -1 };
         let isDragging = false;
         let lastMouse = { x: 0, y: 0 };
         let gameId = null;
+        let isGameReady = false; // Prevents drawing before init
 
+        // --- CANVAS SETUP ---
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d', { alpha: false });
 
         function resize() {
             const container = canvas.parentElement;
-            canvas.width = container.clientWidth;
-            canvas.height = container.clientHeight;
-            if(state.camera.x === 0) state.camera.x = canvas.width / 2;
+            if(container) {
+                canvas.width = container.clientWidth;
+                canvas.height = container.clientHeight;
+                // Auto-center camera if it looks reset
+                if(state.camera.x === 0) state.camera.x = canvas.width / 2;
+            }
         }
         window.addEventListener('resize', resize);
 
-        function initGrid(isNew) {
-            if (isNew) {
-                state.grid = Array(MAP_SIZE).fill().map(() => Array(MAP_SIZE).fill(null));
-                for(let i=0; i<10; i++) {
-                    const rx = Math.floor(Math.random()*MAP_SIZE);
-                    const ry = Math.floor(Math.random()*MAP_SIZE);
-                    state.grid[rx][ry] = { type: 'park', height: 4 }; 
-                }
-            } else { loadGame(); }
-            resize();
-            updateUI();
-            loop();
+        // --- INITIALIZATION LOGIC (CRITICAL FIX) ---
+        function createNewGrid() {
+            const newGrid = Array(MAP_SIZE).fill().map(() => Array(MAP_SIZE).fill(null));
+            // Add some starter decoration
+            for(let i=0; i<8; i++) {
+                const rx = Math.floor(Math.random() * (MAP_SIZE - 4)) + 2;
+                const ry = Math.floor(Math.random() * (MAP_SIZE - 4)) + 2;
+                newGrid[rx][ry] = { type: 'park', height: 4 };
+            }
+            return newGrid;
         }
 
-        // --- Isometric Logic ---
+        function initGame(id, isNew) {
+            gameId = id || 'guest';
+            document.getElementById('user-display').innerText = gameId;
+            document.getElementById('loginModal').classList.add('hidden');
+            
+            // Wait a moment for layout to settle (Modal close animation)
+            setTimeout(() => {
+                resize();
+                
+                let loaded = false;
+                if (!isNew) {
+                    loaded = loadGameData();
+                }
+
+                // Fallback: If load failed or new game requested, create fresh grid
+                if (!loaded || !state.grid || state.grid.length === 0) {
+                    state.grid = createNewGrid();
+                    state.money = 5000;
+                    state.turn = 1;
+                    state.pop = 0;
+                    if(!isNew && !loaded) showToast("Save not found. Started new city.", "text-yellow-600");
+                    else showToast("Welcome to your new city!", "text-green-600");
+                } else {
+                    showToast("City loaded successfully!", "text-green-600");
+                }
+
+                // Force Camera Center
+                resetCamera();
+                isGameReady = true;
+                updateUI();
+                loop(); // Start loop
+            }, 100);
+        }
+
+        function loadGameData() {
+            try {
+                const data = localStorage.getItem('cb_vibrant_' + gameId);
+                if (data) {
+                    const parsed = JSON.parse(data);
+                    // Merge saved state carefully
+                    state = { ...state, ...parsed };
+                    return true;
+                }
+            } catch (e) { console.error("Load failed", e); }
+            return false;
+        }
+
+        function saveGame() {
+            if (!gameId) return;
+            localStorage.setItem('cb_vibrant_' + gameId, JSON.stringify(state));
+        }
+
+        // --- DRAWING LOOP ---
+        function loop() {
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        function draw() {
+            // 1. Background
+            ctx.fillStyle = '#eef2ff'; 
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            if (!isGameReady) return; // Don't draw if not ready
+
+            // 2. Draw Grid
+            for (let x = 0; x < MAP_SIZE; x++) {
+                for (let y = 0; y < MAP_SIZE; y++) {
+                    drawTile(x, y);
+                }
+            }
+
+            // 3. Draw Cursor
+            if (hoveredTile.x >= 0 && hoveredTile.x < MAP_SIZE && hoveredTile.y >= 0 && hoveredTile.y < MAP_SIZE) {
+                drawCursor(hoveredTile.x, hoveredTile.y);
+            }
+        }
+
         function isoToScreen(x, y) {
             return {
                 x: (x - y) * TILE_WIDTH * 0.5 + state.camera.x,
@@ -258,35 +316,13 @@
             };
         }
 
-        function screenToIso(sx, sy) {
-            const adjX = sx - state.camera.x;
-            const adjY = sy - state.camera.y;
-            const gy = (adjY / (TILE_HEIGHT * 0.5) - adjX / (TILE_WIDTH * 0.5)) / 2;
-            const gx = (adjY / (TILE_HEIGHT * 0.5) + adjX / (TILE_WIDTH * 0.5)) / 2;
-            return { x: Math.floor(gx), y: Math.floor(gy) };
-        }
-
-        // --- Drawing ---
-        function draw() {
-            ctx.fillStyle = '#eef2ff'; 
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            for (let x = 0; x < MAP_SIZE; x++) {
-                for (let y = 0; y < MAP_SIZE; y++) {
-                    drawTile(x, y);
-                }
-            }
-
-            if (hoveredTile.x >= 0 && hoveredTile.x < MAP_SIZE && hoveredTile.y >= 0 && hoveredTile.y < MAP_SIZE) {
-                drawCursor(hoveredTile.x, hoveredTile.y);
-            }
-        }
-
         function drawTile(x, y) {
             const pos = isoToScreen(x, y);
+            
+            // Culling (Performance & Glitch prevention)
             if (pos.x < -100 || pos.x > canvas.width + 100 || pos.y < -100 || pos.y > canvas.height + 100) return;
 
-            // Ground
+            // Draw Ground
             ctx.beginPath();
             ctx.moveTo(pos.x, pos.y);
             ctx.lineTo(pos.x + TILE_WIDTH/2, pos.y + TILE_HEIGHT/2);
@@ -294,20 +330,25 @@
             ctx.lineTo(pos.x - TILE_WIDTH/2, pos.y + TILE_HEIGHT/2);
             ctx.closePath();
             
-            // Checkerboard
-            ctx.fillStyle = (x+y)%2 === 0 ? '#E0E7FF' : '#C5CAE9'; // Very Light Indigo
+            // Checkerboard Pattern
+            ctx.fillStyle = (x + y) % 2 === 0 ? '#E0E7FF' : '#C5CAE9';
             
-            if(hoveredTile.x === x && hoveredTile.y === y && !state.grid[x][y]) {
-                ctx.fillStyle = '#FF80AB'; // Pink highlight
+            // Highlight hovered ground
+            if (x === hoveredTile.x && y === hoveredTile.y && !state.grid[x][y]) {
+                ctx.fillStyle = '#F8BBD0'; // Pink tint
             }
             ctx.fill();
 
-            const cell = state.grid[x][y];
+            // Safe Access to Grid
+            const cell = (state.grid && state.grid[x]) ? state.grid[x][y] : null;
+
+            // Ghost Building
             if (x === hoveredTile.x && y === hoveredTile.y && selectedTool && selectedTool !== 'DELETE' && !cell) {
                 const asset = ASSETS[selectedTool];
-                drawBlock(pos.x, pos.y, asset.color, asset.height, true);
+                if(asset) drawBlock(pos.x, pos.y, asset.color, asset.height, true);
             }
 
+            // Actual Building
             if (cell) {
                 const asset = ASSETS[cell.type];
                 if(asset) drawBlock(pos.x, pos.y, asset.color, asset.height || 10, false);
@@ -318,7 +359,7 @@
             const topY = oy - height;
             ctx.globalAlpha = isGhost ? 0.6 : 1.0;
 
-            // Right Face (Darker)
+            // Right Face (Darkest)
             ctx.fillStyle = adjustColor(color, -40); 
             ctx.beginPath();
             ctx.moveTo(ox, oy + TILE_HEIGHT);
@@ -336,7 +377,7 @@
             ctx.lineTo(ox, topY + TILE_HEIGHT);
             ctx.fill();
 
-            // Top Face (Original Color)
+            // Top Face (Light/Color)
             ctx.fillStyle = color;
             ctx.beginPath();
             ctx.moveTo(ox, topY);
@@ -346,7 +387,7 @@
             ctx.fill();
 
             // Highlight Edge
-            ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+            ctx.strokeStyle = 'rgba(255,255,255,0.4)';
             ctx.lineWidth = 1;
             ctx.stroke();
 
@@ -366,44 +407,109 @@
             ctx.stroke();
         }
 
-        function adjustColor(color, amount) {
-            return '#' + color.replace(/^#/, '').replace(/../g, color => ('0'+Math.min(255, Math.max(0, parseInt(color, 16) + amount)).toString(16)).substr(-2));
+        // --- INTERACTION ---
+        function screenToIso(sx, sy) {
+            const adjX = sx - state.camera.x;
+            const adjY = sy - state.camera.y;
+            const gy = (adjY / (TILE_HEIGHT * 0.5) - adjX / (TILE_WIDTH * 0.5)) / 2;
+            const gx = (adjY / (TILE_HEIGHT * 0.5) + adjX / (TILE_WIDTH * 0.5)) / 2;
+            return { x: Math.floor(gx), y: Math.floor(gy) };
         }
 
-        // --- Logic ---
-        function handleInteraction(x, y) {
-            if (x < 0 || x >= MAP_SIZE || y < 0 || y >= MAP_SIZE) return;
+        canvas.addEventListener('mousemove', e => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
 
+            if (isDragging) {
+                state.camera.x += (e.clientX - lastMouse.x);
+                state.camera.y += (e.clientY - lastMouse.y);
+                lastMouse = { x: e.clientX, y: e.clientY };
+            } else {
+                hoveredTile = screenToIso(mouseX, mouseY);
+            }
+        });
+
+        canvas.addEventListener('mousedown', e => {
+            if (e.button === 2) { // Right Click
+                isDragging = true;
+                lastMouse = { x: e.clientX, y: e.clientY };
+            }
+        });
+
+        canvas.addEventListener('mouseup', e => {
+            if (!isDragging && e.button === 0) {
+                interact(hoveredTile.x, hoveredTile.y);
+            }
+            isDragging = false;
+        });
+        
+        // Touch Support
+        canvas.addEventListener('touchstart', e => {
+            const touch = e.touches[0];
+            lastMouse = { x: touch.clientX, y: touch.clientY };
+            isDragging = true; 
+        }, {passive: false});
+        
+        canvas.addEventListener('touchmove', e => {
+            e.preventDefault(); // Stop scrolling
+            if(isDragging) {
+                const touch = e.touches[0];
+                state.camera.x += (touch.clientX - lastMouse.x);
+                state.camera.y += (touch.clientY - lastMouse.y);
+                lastMouse = { x: touch.clientX, y: touch.clientY };
+            }
+        }, {passive: false});
+        
+        canvas.addEventListener('touchend', e => {
+            isDragging = false; 
+            // Simple tap detection could be added here
+        });
+
+        canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+        function interact(x, y) {
+            if (!isGameReady || x < 0 || x >= MAP_SIZE || y < 0 || y >= MAP_SIZE) return;
+
+            // Demolish Logic
             if (selectedTool === 'DELETE') {
                 if (state.grid[x][y]) {
                     state.grid[x][y] = null;
-                    state.money += 25; 
-                    showToast('Demolished! +₹25', 'text-[#FF5A5E]');
+                    state.money += 25;
+                    showToast("+₹25 Refund", "text-[#FF5A5E]");
                     updateUI();
+                    saveGame();
                 }
                 return;
             }
 
+            // Build Logic
             if (!selectedTool) return;
-            const asset = ASSETS[selectedTool];
-            if (state.grid[x][y]) { showToast('Occupied!', 'text-gray-500'); return; }
+            if (state.grid[x][y]) {
+                showToast("Space blocked!", "text-gray-500");
+                return;
+            }
 
+            const asset = ASSETS[selectedTool];
             if (state.money >= asset.cost) {
                 state.money -= asset.cost;
                 state.grid[x][y] = { type: selectedTool, height: asset.height };
-                showToast(`Built! -₹${asset.cost}`, 'text-[#3F51B5]');
+                showToast(`-₹${asset.cost}`, "text-[#3F51B5]");
                 updateUI();
                 saveGame();
             } else {
-                showToast('Need more Funds!', 'text-[#FF5A5E]');
+                showToast("Not enough Funds!", "text-[#FF5A5E]");
             }
         }
 
+        // --- GAME LOGIC (TURN) ---
         function nextTurn() {
             let income = 0;
             let happySum = 0;
             let pop = 0;
-            let count = 0;
+            let buildingsCount = 0;
+
+            if(!state.grid) return;
 
             for(let row of state.grid) {
                 for(let cell of row) {
@@ -413,25 +519,33 @@
                             if(a.income) income += a.income;
                             if(a.happy) happySum += a.happy;
                             if(a.pop) pop += a.pop;
-                            count++;
+                            buildingsCount++;
                         }
                     }
                 }
             }
+
+            // Simple Economy Simulation
             let happy = 50 + happySum;
             happy = Math.min(100, Math.max(0, happy));
-            const multiplier = happy > 80 ? 1.5 : (happy < 30 ? 0.5 : 1.0);
-            const finalIncome = Math.floor(income * multiplier);
+            
+            // Income Multiplier based on Happiness
+            let multiplier = 1.0;
+            if(happy > 80) multiplier = 1.5;
+            if(happy < 30) multiplier = 0.5;
 
+            const finalIncome = Math.floor(income * multiplier);
             state.money += finalIncome;
             state.pop = pop;
             state.happiness = happy;
             state.turn++;
+
             updateUI();
             saveGame();
-            showToast(`Week ${state.turn}: +₹${finalIncome}`, 'text-green-600 bg-green-50');
+            showToast(`Week ${state.turn}: +₹${finalIncome}`, "bg-green-100 text-green-700");
         }
 
+        // --- UI HELPERS ---
         function updateUI() {
             document.getElementById('ui-money').innerText = state.money.toLocaleString();
             document.getElementById('ui-pop').innerText = state.pop;
@@ -442,65 +556,48 @@
         function showToast(msg, classes) {
             const container = document.getElementById('toast-container');
             const el = document.createElement('div');
-            el.className = `bg-white px-4 py-2 rounded-lg shadow-md border animate-bounce ${classes} font-bold text-center`;
+            el.className = `bg-white px-4 py-3 rounded-xl shadow-lg border-l-4 ${classes} font-bold text-center transform transition-all animate-bounce`;
             el.innerHTML = msg;
             container.appendChild(el);
-            setTimeout(() => el.remove(), 2000);
+            setTimeout(() => el.remove(), 2500);
         }
 
-        window.setTool = (toolKey) => {
-            selectedTool = toolKey;
+        function adjustColor(color, amount) {
+            return '#' + color.replace(/^#/, '').replace(/../g, color => ('0'+Math.min(255, Math.max(0, parseInt(color, 16) + amount)).toString(16)).substr(-2));
+        }
+
+        // --- EXPORTS ---
+        window.setTool = (key) => {
+            selectedTool = key;
             document.querySelectorAll('.btn-tool').forEach(b => b.classList.remove('active'));
-            if(toolKey !== 'DELETE') document.getElementById(`btn-${toolKey}`).classList.add('active');
+            if(key !== 'DELETE') document.getElementById('btn-'+key)?.classList.add('active');
+        };
+        
+        window.resetCamera = () => {
+            state.camera.x = canvas.width / 2;
+            state.camera.y = 150;
         };
 
-        window.resetCamera = () => { state.camera.x = canvas.width / 2; state.camera.y = 100; };
-        window.openHelp = () => document.getElementById('instructionsModal').classList.remove('hidden');
-
-        // Buttons
-        const toolContainer = document.getElementById('tools-container');
+        // --- BUTTON GENERATION ---
+        const container = document.getElementById('tools-container');
         Object.keys(ASSETS).forEach(key => {
             const a = ASSETS[key];
             const btn = document.createElement('button');
             btn.id = `btn-${key}`;
-            btn.className = 'btn-tool bg-white border border-gray-200 rounded-xl p-2 flex flex-col items-center justify-center gap-1 hover:border-gray-300';
+            btn.className = 'btn-tool bg-white border border-gray-200 rounded-lg p-2 flex flex-col items-center justify-center gap-1 hover:bg-gray-50';
             btn.innerHTML = `
-                <div class="text-2xl" style="color: ${a.color}"><i class="fas ${a.icon}"></i></div>
+                <div class="text-xl" style="color: ${a.color}"><i class="fas ${a.icon}"></i></div>
                 <div class="text-[10px] font-bold uppercase text-gray-500">${a.name}</div>
                 <div class="text-[10px] font-bold text-[#6A1B9A]">₹${a.cost}</div>
             `;
-            btn.onclick = () => setTool(key);
-            toolContainer.appendChild(btn);
+            btn.onclick = () => window.setTool(key);
+            container.appendChild(btn);
         });
 
         document.getElementById('btn-next-turn').onclick = nextTurn;
-        
-        // Input
-        canvas.addEventListener('mousedown', e => { isDragging = false; if(e.button === 2) { isDragging = true; lastMouse = { x: e.clientX, y: e.clientY }; } });
-        canvas.addEventListener('mousemove', e => {
-            if(isDragging) {
-                state.camera.x += (e.clientX - lastMouse.x); state.camera.y += (e.clientY - lastMouse.y); lastMouse = { x: e.clientX, y: e.clientY };
-            } else {
-                const rect = canvas.getBoundingClientRect();
-                hoveredTile = screenToIso(e.clientX - rect.left, e.clientY - rect.top);
-            }
-        });
-        canvas.addEventListener('mouseup', e => { if(!isDragging && e.button === 0) handleInteraction(hoveredTile.x, hoveredTile.y); isDragging = false; });
-        canvas.addEventListener('contextmenu', e => e.preventDefault());
+        document.getElementById('btnLogin').onclick = () => initGame(document.getElementById('loginId').value, false);
+        document.getElementById('btnNew').onclick = () => initGame(document.getElementById('loginId').value, true);
 
-        function saveGame() { if(!gameId) return; localStorage.setItem('cb_vibrant_' + gameId, JSON.stringify(state)); }
-        function loadGame() { const data = localStorage.getItem('cb_vibrant_' + gameId); if(data) state = JSON.parse(data); }
-
-        document.getElementById('btnLogin').onclick = () => {
-            const val = document.getElementById('loginId').value;
-            if(val) { gameId = val; document.getElementById('user-display').innerText = val; document.getElementById('loginModal').classList.add('hidden'); initGrid(false); }
-        };
-        document.getElementById('btnNew').onclick = () => {
-            const val = document.getElementById('loginId').value;
-            if(val) { gameId = val; document.getElementById('user-display').innerText = val; document.getElementById('loginModal').classList.add('hidden'); initGrid(true); }
-        };
-
-        function loop() { draw(); requestAnimationFrame(loop); }
     </script>
 </body>
 </html>
