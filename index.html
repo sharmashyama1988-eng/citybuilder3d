@@ -1,549 +1,550 @@
 <!DOCTYPE html>
 <html lang="hi">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CityBuilder 3D - Easy Mode</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>City Builder Original</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3909676898216763"
-        crossorigin="anonymous"></script>
-
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3909676898216763" crossorigin="anonymous"></script>
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&display=swap');
-
-        :root {
-            --c-indigo: #3F51B5;
-            --c-bittersweet: #FF5A5E;
-            --c-slate-blue: #7C4DFF;
-            --c-hot-pink: #FF80AB;
-            --c-dark-violet: #6A1B9A;
-        }
-
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body {
-            font-family: 'Nunito', sans-serif;
-            background-color: #eef2ff;
-            color: #1f2937;
-            height: 100vh;
-            width: 100vw;
-            overflow: hidden;
-            user-select: none;
-            /* Text selection disable for game feel */
-        }
-
-        /* Top Stats Bar */
-        .hud-panel {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(8px);
-            border-bottom: 2px solid rgba(0, 0, 0, 0.05);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        }
-
-        /* Bottom Controls Container */
-        .controls-dock {
-            background: rgba(255, 255, 255, 0.98);
-            border-top: 1px solid #e5e7eb;
-            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
-            padding-bottom: env(safe-area-inset-bottom);
-            /* iPhone safe area */
-        }
-
-        /* Big Action Button */
-        .btn-action {
-            transition: transform 0.1s, background 0.2s;
-            border-bottom: 4px solid rgba(0, 0, 0, 0.15);
-        }
-
-        .btn-action:active {
-            transform: translateY(2px);
-            border-bottom-width: 0;
-            margin-top: 4px;
-        }
-
-        /* Tool Item */
-        .tool-card {
-            min-width: 70px;
-            height: 70px;
-            border-radius: 12px;
-            border: 2px solid transparent;
-            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
-            background: #f9fafb;
-            cursor: pointer;
+            align-items: center;
+            min-height: 100vh;
+            padding: 10px;
         }
-
-        .tool-card.active {
-            background: #eef2ff;
-            border-color: var(--c-indigo);
-            box-shadow: 0 4px 12px rgba(63, 81, 181, 0.2);
-            transform: translateY(-2px);
-        }
-
-        .tool-card:active {
-            transform: scale(0.95);
-        }
-
-        /* Canvas */
-        canvas {
-            touch-action: none;
-            /* Very Important for mobile gestures */
+        .game-container {
+            display: none; /* लॉगिन के बाद दिखेगा */
+            flex-direction: column;
+            gap: 20px;
+            max-width: 1200px;
             width: 100%;
-            height: 100%;
+        }
+        .grid-canvas {
+            border: 4px solid #374151;
+            background-color: #a8a29e; /* वही पुरानी मिट्टी जैसा रंग */
+            border-radius: 8px;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 1 / 1; 
+            cursor: crosshair;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .sidebar {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .asset-button {
+            padding: 8px;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: transform 0.1s;
+            box-shadow: 0 2px #9ca3af;
+            font-size: 0.9rem;
+            border: 1px solid #e5e7eb;
+        }
+        .asset-button:hover { transform: translateY(-1px); }
+        .asset-button:active { transform: translateY(2px); box-shadow: none; }
+        .active-asset { border: 2px solid #2563eb; background-color: #eff6ff; }
+        
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex; justify-content: center; align-items: center; z-index: 50;
+        }
+        .modal-content {
+            background-color: white; padding: 30px; border-radius: 12px;
+            max-width: 90%; width: 400px; text-align: center;
         }
 
-        .modal-bg {
-            background: rgba(20, 20, 30, 0.85);
-            backdrop-filter: blur(4px);
+        @media (min-width: 1024px) {
+            .game-container { flex-direction: row; align-items: flex-start; }
         }
     </style>
 </head>
+<body class="bg-gray-100">
 
-<body class="flex flex-col h-full">
-
-    <div class="hud-panel flex justify-between items-center p-3 z-20 absolute top-0 w-full">
-        <div class="flex flex-col leading-tight">
-            <h1 class="text-xl font-black text-[#6A1B9A] tracking-tight">CITY<span class="text-[#FF5A5E]">3D</span></h1>
-            <span id="user-display" class="text-xs font-bold text-gray-400">GUEST MODE</span>
-        </div>
-
-        <div class="flex gap-4">
-            <div class="text-center">
-                <div class="text-[10px] font-bold text-gray-400 uppercase">FUNDS</div>
-                <div class="text-lg font-black text-[#6A1B9A]">₹<span id="ui-money">0</span></div>
-            </div>
-            <div class="text-center">
-                <div class="text-[10px] font-bold text-gray-400 uppercase">PEOPLE</div>
-                <div class="text-lg font-black text-[#3F51B5]" id="ui-pop">0</div>
-            </div>
-        </div>
-
-        <button onclick="document.getElementById('instructionsModal').classList.remove('hidden')"
-            class="bg-gray-100 p-2 rounded-lg text-gray-600 hover:bg-gray-200">
-            <i class="fas fa-bars"></i>
-        </button>
+<div id="loginModal" class="modal">
+    <div class="modal-content">
+        <h2 class="text-2xl font-bold mb-4 text-indigo-600">City Builder Login</h2>
+        <input type="text" id="loginId" placeholder="User ID (e.g. amit)" class="w-full p-2 mb-4 border rounded" maxlength="20">
+        <button id="loginButton" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white p-2 rounded font-bold mb-2">Load Game</button>
+        <button id="newUserButton" class="w-full bg-green-500 hover:bg-green-600 text-white p-2 rounded font-bold">New Game</button>
+        <p id="loginMessage" class="text-xs text-red-500 mt-2 h-4"></p>
     </div>
+</div>
 
-    <div class="flex-1 relative overflow-hidden bg-[#eef2ff] w-full h-full">
-        <canvas id="gameCanvas"></canvas>
-
-        <div id="toast-container"
-            class="absolute top-20 left-1/2 transform -translate-x-1/2 flex flex-col items-center pointer-events-none z-10 w-full px-4">
+<div class="game-container" id="mainGameContainer">
+    <div class="sidebar lg:w-1/3">
+        <h1 class="text-2xl font-bold mb-4 text-gray-800">My City 2D</h1>
+        
+        <div class="bg-blue-50 p-3 rounded mb-4 text-sm text-blue-800">
+            <strong>User:</strong> <span id="userIdDisplay">Guest</span> | <strong>Map:</strong> <span id="currentMapDisplay">1</span>
         </div>
 
-        <button onclick="resetCamera()"
-            class="absolute bottom-4 right-4 bg-white p-3 rounded-full shadow-lg text-[#3F51B5] border border-gray-100 active:scale-90 transition z-10">
-            <i class="fas fa-crosshairs"></i>
-        </button>
-    </div>
-
-    <div class="controls-dock z-20 flex flex-col">
-
-        <div class="bg-[#3F51B5] text-white text-xs font-bold py-1 px-4 text-center tracking-wide" id="info-bar">
-            Select a tool to start building...
+        <div class="space-y-2 mb-6 text-sm">
+            <div class="flex justify-between border-b pb-1"><span>Money:</span> <span class="font-bold text-green-600">₹<span id="money_val">0</span></span></div>
+            <div class="flex justify-between border-b pb-1"><span>Population:</span> <span class="font-bold text-blue-600" id="pop_val">0</span></div>
+            <div class="flex justify-between border-b pb-1"><span>Happiness:</span> <span class="font-bold text-pink-600"><span id="happiness_val">50</span>%</span></div>
+            <div class="flex justify-between"><span>Power/Water:</span> <span class="font-bold text-gray-600"><span id="power_val">0</span> / <span id="water_val">0</span></span></div>
         </div>
 
-        <div class="flex p-3 gap-3 overflow-x-auto scroller items-center no-scrollbar">
+        <h2 class="text-lg font-bold mb-2">Build</h2>
+        <div id="controls" class="grid grid-cols-3 gap-2 mb-6"></div>
+        
+        <div id="message" class="bg-yellow-100 text-yellow-800 p-2 rounded text-center text-sm hidden mb-4"></div>
 
-            <div id="tool-move" class="tool-card active min-w-[60px]" onclick="setMode('MOVE')">
-                <i class="fas fa-hand-paper text-gray-500 text-xl mb-1"></i>
-                <span class="text-[10px] font-bold text-gray-500">MOVE</span>
+        <div class="space-y-2">
+            <button id="endTurnButton" class="w-full bg-indigo-600 text-white p-3 rounded font-bold hover:bg-indigo-700">Next Week (Turn <span id="turn_val">1</span>)</button>
+            <div class="grid grid-cols-2 gap-2">
+                <button id="openMapBtn" class="bg-gray-200 p-2 rounded hover:bg-gray-300 font-bold text-sm">Change Map</button>
+                <button onclick="document.getElementById('instructionsModal').style.display='flex'" class="bg-gray-200 p-2 rounded hover:bg-gray-300 font-bold text-sm">Rules</button>
             </div>
-
-            <div class="w-[1px] h-10 bg-gray-200 mx-1"></div>
-            <div id="tools-container" class="flex gap-2"></div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-0 border-t border-gray-200">
-            <button onclick="setMode('DELETE')"
-                class="py-4 bg-red-50 text-[#FF5A5E] font-bold hover:bg-red-100 transition flex items-center justify-center gap-2">
-                <i class="fas fa-trash-alt"></i> DEMOLISH
-            </button>
-            <button id="btn-next-turn"
-                class="py-4 bg-[#6A1B9A] text-white font-bold hover:bg-[#4a148c] transition flex items-center justify-center gap-2">
-                NEXT WEEK <span id="turn-display" class="bg-white/20 px-2 rounded text-xs">1</span>
-            </button>
         </div>
     </div>
 
-    <div id="loginModal" class="modal-bg fixed inset-0 flex items-center justify-center z-50">
-        <div class="bg-white rounded-2xl p-6 w-full max-w-xs text-center shadow-2xl mx-4">
-            <div class="bg-[#eef2ff] w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i class="fas fa-city text-3xl text-[#3F51B5]"></i>
-            </div>
-            <h2 class="text-2xl font-black text-[#1f2937] mb-1">Welcome!</h2>
-            <p class="text-gray-400 text-sm mb-6">Create your dream isometric city.</p>
-
-            <input type="text" id="loginId" placeholder="City Name (e.g. Mumbai)"
-                class="w-full bg-gray-50 border-2 border-gray-100 text-gray-800 p-3 rounded-xl mb-4 text-center font-bold focus:border-[#3F51B5] outline-none">
-
-            <button id="btnStart" class="btn-action w-full bg-[#3F51B5] text-white font-bold py-3 rounded-xl mb-3">
-                START PLAYING
-            </button>
-            <button id="btnLoad" class="text-xs text-gray-400 font-bold underline">Load Saved City</button>
-        </div>
+    <div class="lg:w-2/3">
+        <canvas id="cityCanvas" class="grid-canvas"></canvas>
     </div>
+</div>
 
-    <div id="instructionsModal" class="modal-bg fixed inset-0 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl">
-            <div class="flex justify-between items-center mb-4 border-b pb-2">
-                <h3 class="font-bold text-lg text-[#6A1B9A]">Game Guide</h3>
-                <button onclick="document.getElementById('instructionsModal').classList.add('hidden')"
-                    class="text-gray-400 text-xl">&times;</button>
-            </div>
-
-            <div class="space-y-3 text-sm text-gray-600 mb-6">
-                <div class="flex gap-3 items-center">
-                    <div class="w-8 h-8 rounded bg-gray-100 flex items-center justify-center"><i
-                            class="fas fa-hand-paper text-gray-500"></i></div>
-                    <p><strong>Move Mode:</strong> Drag map to look around.</p>
-                </div>
-                <div class="flex gap-3 items-center">
-                    <div class="w-8 h-8 rounded bg-[#eef2ff] flex items-center justify-center"><i
-                            class="fas fa-home text-[#3F51B5]"></i></div>
-                    <p><strong>Build Mode:</strong> Tap on the grid to build.</p>
-                </div>
-                <div class="flex gap-3 items-center">
-                    <div class="w-8 h-8 rounded bg-purple-50 flex items-center justify-center"><i
-                            class="fas fa-forward text-[#6A1B9A]"></i></div>
-                    <p><strong>Next Week:</strong> Collect money & grow pop.</p>
-                </div>
-            </div>
-
-            <button onclick="document.getElementById('instructionsModal').classList.add('hidden')"
-                class="w-full bg-[#3F51B5] text-white font-bold py-3 rounded-xl">GOT IT</button>
-        </div>
+<div id="mapSelectModal" class="modal" style="display:none;">
+    <div class="modal-content text-left">
+        <h2 class="text-xl font-bold mb-4">Select Map</h2>
+        <div id="mapListContainer" class="max-h-60 overflow-y-auto mb-4 space-y-2"></div>
+        <button onclick="document.getElementById('mapSelectModal').style.display='none'" class="bg-red-500 text-white w-full p-2 rounded">Close</button>
     </div>
-    <script type="module">
-    // ** 1. CONFIGURATION (सेटिंग्स) **
-    const TILE_WIDTH = 64;
-    const TILE_HEIGHT = 32;
-    const MAP_SIZE = 20;
+</div>
 
-    // ** 2. ASSETS (बिल्डिंग्स और रंग) **
+<div id="instructionsModal" class="modal" style="display:none;">
+    <div class="modal-content text-left">
+        <h2 class="text-xl font-bold mb-2">How to Play</h2>
+        <ul class="list-disc pl-5 text-sm space-y-1 mb-4">
+            <li>Select a building and click on the grid.</li>
+            <li>Houses need Power & Water.</li>
+            <li>Factories earn money but reduce happiness.</li>
+            <li>Click 'Next Week' to earn tax.</li>
+        </ul>
+        <button onclick="document.getElementById('instructionsModal').style.display='none'" class="bg-blue-500 text-white w-full p-2 rounded">OK</button>
+    </div>
+</div>
+
+<script type="module">
+    // --- 1. CONFIGURATION ---
+    const GRID_SIZE = 20;
+    const TOTAL_MAPS = 20;
+    const CANVAS_SIZE = 800; // इंटरनल रेजोल्यूशन
+    const TILE_SIZE = CANVAS_SIZE / GRID_SIZE;
+
     const ASSETS = {
-        road:     { name: 'Road',     icon: 'fa-road',         cost: 20,    color: '#9CA3AF', height: 2,  type: 'deco', desc: 'Connects places' },
-        house:    { name: 'House',    icon: 'fa-home',         cost: 100,   color: '#F8BBD0', height: 12, type: 'res', pop: 4, income: 5, desc: '+4 Pop | +₹5 Income' },
-        apt:      { name: 'Apts',     icon: 'fa-building',     cost: 300,   color: '#3F51B5', height: 30, type: 'res', pop: 12, income: 20, desc: '+12 Pop | +₹20 Income' },
-        park:     { name: 'Park',     icon: 'fa-tree',         cost: 150,   color: '#4ade80', height: 6,  type: 'deco', happy: 10, desc: '+10 Happiness' },
-        power:    { name: 'Power',    icon: 'fa-bolt',         cost: 500,   color: '#FF5A5E', height: 18, type: 'util', power: 40, desc: 'Provides Electricity' },
-        water:    { name: 'Water',    icon: 'fa-tint',         cost: 400,   color: '#7C4DFF', height: 20, type: 'util', water: 40, desc: 'Provides Water' },
-        factory:  { name: 'Factory',  icon: 'fa-industry',     cost: 1000,  color: '#6A1B9A', height: 25, type: 'ind', income: 80, happy: -10, desc: '+₹80 Income | -10 Happy' },
-        mall:     { name: 'Mall',     icon: 'fa-shopping-bag', cost: 2000,  color: '#FF80AB', height: 40, type: 'com', income: 150, happy: 5, desc: '+₹150 Income | +5 Happy' },
+        HOUSE: { name: 'घर', cost: 100, size: 1, pop: 10, power: -2, water: -2, happiness: 1, revenue: 5, color: '#fef08a' },
+        POWER_PLANT: { name: 'बिजली', cost: 500, size: 2, pop: 0, power: 50, water: -10, happiness: -5, revenue: 0, color: '#34d399' },
+        WATER_TOWER: { name: 'पानी', cost: 300, size: 1, pop: 0, power: 0, water: 30, happiness: 0, revenue: 0, color: '#93c5fd' },
+        ROAD: { name: 'सड़क', cost: 20, size: 1, pop: 0, power: 0, water: 0, happiness: 0, revenue: 0, color: '#4b5563' },
+        SCHOOL: { name: 'स्कूल', cost: 500, size: 2, pop: 0, power: -10, water: -10, happiness: 15, revenue: -10, color: '#f97316' },
+        FACTORY: { name: 'फैक्ट्री', cost: 2000, size: 3, pop: 0, power: -50, water: -50, happiness: -30, revenue: 80, color: '#71717a' },
+        HOSPITAL: { name: 'अस्पताल', cost: 7500, size: 3, pop: 0, power: -50, water: -50, happiness: 80, revenue: -75, color: '#f87171' },
+        MALL: { name: 'मॉल', cost: 10000, size: 4, pop: 0, power: -60, water: -60, happiness: 60, revenue: 250, color: '#c026d3' },
     };
 
-    // ** 3. STATE (गेम का हाल) **
+    // --- 2. GAME STATE ---
     let state = {
-        money: 5000,
-        pop: 0,
-        happiness: 50,
+        money: 15000,
         turn: 1,
-        grid: [],
-        camera: { x: window.innerWidth / 2, y: 150 } // सुरक्षित डिफ़ॉल्ट
+        population: 0,
+        happiness: 50,
+        currentMap: 0,
+        unlockedMaps: 1,
+        grids: Array.from({length: TOTAL_MAPS}, () => Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null)))
     };
+    
+    let currentAsset = null;
+    let gameId = null;
+    let canvas, ctx;
 
-    let interactionMode = 'MOVE';
-    let selectedTool = null;
-    let isDragging = false;
-    let lastTouch = { x: 0, y: 0 };
-    let gameId = 'guest';
-
-    // ** 4. CANVAS SETUP **
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d', { alpha: false });
-
-    // ** 5. ROBUST RESIZE (मजबूत रिसाइज़ सिस्टम) **
-    function checkCanvasSize() {
-        const parent = canvas.parentElement;
-        if (parent && (canvas.width !== parent.clientWidth || canvas.height !== parent.clientHeight)) {
-            canvas.width = parent.clientWidth;
-            canvas.height = parent.clientHeight;
-            
-            // अगर कैमरा खो गया है (0 पर है), तो उसे रीसेट करें
-            if (state.camera.x < 50 || state.camera.x > canvas.width + 50) {
-                state.camera.x = canvas.width / 2;
-                state.camera.y = 150;
-            }
-            return true; // साइज बदला गया
-        }
-        return false;
+    // --- 3. CORE FUNCTIONS ---
+    
+    function init() {
+        canvas = document.getElementById('cityCanvas');
+        ctx = canvas.getContext('2d');
+        canvas.width = CANVAS_SIZE;
+        canvas.height = CANVAS_SIZE;
+        
+        setupControls();
+        drawGrid(); // खाली ग्रिड दिखाएं
+        
+        // रिसाइज लॉजिक
+        window.addEventListener('resize', drawGrid);
     }
 
-    // ** 6. GAME START (गेम शुरू) **
-    function initGame(isNew) {
-        document.getElementById('loginModal').style.display = 'none';
-        
-        // तुरंत चेक करें और सेट करें
-        checkCanvasSize();
-
-        if(isNew) {
-            // नया ग्रिड बनाएं
-            state.grid = Array(MAP_SIZE).fill().map(() => Array(MAP_SIZE).fill(null));
-            
-            // मैप के बीच में कुछ बिल्डिंग्स रखें ताकि वो दिखे
-            const mid = Math.floor(MAP_SIZE/2);
-            state.grid[mid][mid] = { type: 'house', height: 12 }; 
-            state.grid[mid+1][mid] = { type: 'road', height: 2 };
-            state.grid[mid][mid+1] = { type: 'road', height: 2 };
-            state.grid[mid-1][mid-1] = { type: 'park', height: 4 };
-
-            state.money = 5000;
-        } else {
-            loadGame();
-        }
-
-        // कैमरा को जबरदस्ती सेंटर में लाएं
-        resetCamera();
-        
-        updateUI();
-        requestAnimationFrame(renderLoop);
+    function getCurrentGrid() {
+        return state.grids[state.currentMap];
     }
 
-    // ** 7. DRAWING LOOP (चित्रकारी) **
-    function renderLoop() {
-        // हर फ्रेम पर चेक करें कि क्या साइज सही है
-        checkCanvasSize();
+    function drawGrid() {
+        const grid = getCurrentGrid();
+        ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
 
-        // बैकग्राउंड साफ करें
-        ctx.fillStyle = '#eef2ff'; 
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // 1. बैकग्राउंड (मिट्टी)
+        ctx.fillStyle = '#a8a29e'; 
+        ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
 
-        // अगर ग्रिड नहीं है, तो कुछ न करें
-        if(!state.grid || !state.grid.length) {
-            requestAnimationFrame(renderLoop);
-            return;
+        // 2. ग्रिड लाइनें
+        ctx.strokeStyle = '#4b5563';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        for(let i=0; i<=GRID_SIZE; i++) {
+            ctx.moveTo(i*TILE_SIZE, 0); ctx.lineTo(i*TILE_SIZE, CANVAS_SIZE);
+            ctx.moveTo(0, i*TILE_SIZE); ctx.lineTo(CANVAS_SIZE, i*TILE_SIZE);
         }
+        ctx.stroke();
 
-        // मैप रेंडर करें
-        for (let x = 0; x < MAP_SIZE; x++) {
-            for (let y = 0; y < MAP_SIZE; y++) {
-                const pos = isoToScreen(x, y);
-                
-                // Culling: अगर स्क्रीन के बाहर है तो न बनाएं (Performance के लिए)
-                if(pos.x < -100 || pos.x > canvas.width + 100 || pos.y < -100 || pos.y > canvas.height + 100) continue;
-
-                // 1. जमीन (Ground)
-                ctx.beginPath();
-                ctx.moveTo(pos.x, pos.y);
-                ctx.lineTo(pos.x + TILE_WIDTH/2, pos.y + TILE_HEIGHT/2);
-                ctx.lineTo(pos.x, pos.y + TILE_HEIGHT);
-                ctx.lineTo(pos.x - TILE_WIDTH/2, pos.y + TILE_HEIGHT/2);
-                ctx.closePath();
-                ctx.fillStyle = (x+y)%2===0 ? '#E0E7FF' : '#C5CAE9'; // चेकर्स पैटर्न
-                ctx.fill();
-
-                // 2. बिल्डिंग्स (Objects)
-                const cell = state.grid[x][y];
-                if(cell) {
-                    const asset = ASSETS[cell.type];
-                    if(asset) drawBlock(pos.x, pos.y, asset.color, asset.height);
+        // 3. एसेट्स ड्रा करें
+        for(let x=0; x<GRID_SIZE; x++) {
+            for(let y=0; y<GRID_SIZE; y++) {
+                const cell = grid[x][y];
+                if(cell && cell.type !== 'BLOCKED') {
+                    const asset = ASSETS[cell.type]; // Key ढूंढें
+                    if(!asset) { 
+                        // बैकवर्ड कंपैटिबिलिटी के लिए नाम से खोजें
+                        const key = Object.keys(ASSETS).find(k => ASSETS[k].name === cell.name);
+                        if(key) drawAsset(x, y, ASSETS[key], cell.size);
+                    } else {
+                        drawAsset(x, y, asset, cell.size);
+                    }
                 }
             }
         }
-        requestAnimationFrame(renderLoop);
-    }
-
-    // गणित: आइसोमेट्रिक (3D) को स्क्रीन (2D) में बदलना
-    function isoToScreen(x, y) {
-        return {
-            x: (x - y) * TILE_WIDTH * 0.5 + state.camera.x,
-            y: (x + y) * TILE_HEIGHT * 0.5 + state.camera.y
-        };
-    }
-
-    function screenToIso(sx, sy) {
-        const adjX = sx - state.camera.x;
-        const adjY = sy - state.camera.y;
-        const gy = (adjY / (TILE_HEIGHT * 0.5) - adjX / (TILE_WIDTH * 0.5)) / 2;
-        const gx = (adjY / (TILE_HEIGHT * 0.5) + adjX / (TILE_WIDTH * 0.5)) / 2;
-        return { x: Math.floor(gx), y: Math.floor(gy) };
-    }
-
-    function drawBlock(ox, oy, color, height) {
-        const topY = oy - height;
         
-        ctx.fillStyle = adjustColor(color, -40); // दायां हिस्सा (अंधेरा)
-        ctx.beginPath(); ctx.moveTo(ox, oy + TILE_HEIGHT); ctx.lineTo(ox + TILE_WIDTH/2, oy + TILE_HEIGHT/2); ctx.lineTo(ox + TILE_WIDTH/2, topY + TILE_HEIGHT/2); ctx.lineTo(ox, topY + TILE_HEIGHT); ctx.fill();
+        // 4. प्रीव्यू (अगर कुछ सेलेक्ट है)
+        // (Performance के लिए mousemove पर अलग से हैंडल नहीं कर रहे, 
+        // बस क्लिक पर लगाएंगे, यह "lag free" रखेगा)
+    }
+
+    function drawAsset(x, y, asset, size) {
+        ctx.fillStyle = asset.color;
+        ctx.fillRect(x * TILE_SIZE + 2, y * TILE_SIZE + 2, size * TILE_SIZE - 4, size * TILE_SIZE - 4);
         
-        ctx.fillStyle = adjustColor(color, -20); // बायां हिस्सा (मध्यम)
-        ctx.beginPath(); ctx.moveTo(ox, oy + TILE_HEIGHT); ctx.lineTo(ox - TILE_WIDTH/2, oy + TILE_HEIGHT/2); ctx.lineTo(ox - TILE_WIDTH/2, topY + TILE_HEIGHT/2); ctx.lineTo(ox, topY + TILE_HEIGHT); ctx.fill();
-        
-        ctx.fillStyle = color; // ऊपर का हिस्सा (असली रंग)
-        ctx.beginPath(); ctx.moveTo(ox, topY); ctx.lineTo(ox + TILE_WIDTH/2, topY + TILE_HEIGHT/2); ctx.lineTo(ox, topY + TILE_HEIGHT); ctx.lineTo(ox - TILE_WIDTH/2, topY + TILE_HEIGHT/2); ctx.fill();
-        
-        ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 1; ctx.stroke();
-    }
-
-    // ** 8. CONTROLS (इनपुट) **
-    function getCoords(e) {
-        const rect = canvas.getBoundingClientRect();
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        return { x: clientX - rect.left, y: clientY - rect.top };
-    }
-
-    function onStart(e) {
-        isDragging = true;
-        lastTouch = getCoords(e);
-    }
-
-    function onMove(e) {
-        if(!isDragging) return;
-        const coords = getCoords(e);
-        if (interactionMode === 'MOVE') {
-            state.camera.x += (coords.x - lastTouch.x);
-            state.camera.y += (coords.y - lastTouch.y);
-        }
-        lastTouch = coords;
-    }
-
-    function onEnd(e) {
-        isDragging = false;
-        // अगर मूव मोड नहीं है, तो क्लिक माना जाएगा
-        if(interactionMode !== 'MOVE') {
-            const gridPos = screenToIso(lastTouch.x, lastTouch.y);
-            handleGridClick(gridPos.x, gridPos.y);
+        // टेक्स्ट
+        if(size > 1 || asset.name.length < 5) {
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(asset.name, (x + size/2) * TILE_SIZE, (y + size/2) * TILE_SIZE);
         }
     }
 
-    canvas.addEventListener('mousedown', onStart);
-    canvas.addEventListener('mousemove', onMove);
-    canvas.addEventListener('mouseup', onEnd);
-    
-    // मोबाइल टच इवेंट्स
-    canvas.addEventListener('touchstart', onStart, {passive: true});
-    canvas.addEventListener('touchmove', (e) => { 
-        if(interactionMode === 'MOVE') e.preventDefault(); // मैप हिलाते वक्त पेज स्क्रॉल रोकें
-        onMove(e); 
-    }, {passive: false});
-    canvas.addEventListener('touchend', onEnd);
+    function placeAsset(x, y) {
+        if(!currentAsset) return;
+        if(currentAsset === 'DELETE') {
+            handleDelete(x, y);
+            return;
+        }
 
-    // ** 9. GAME LOGIC **
-    function handleGridClick(x, y) {
-        if (x < 0 || x >= MAP_SIZE || y < 0 || y >= MAP_SIZE) return;
+        const asset = ASSETS[currentAsset];
+        const grid = getCurrentGrid();
 
-        if (interactionMode === 'DELETE' && state.grid[x][y]) {
-            state.grid[x][y] = null;
-            state.money += 25;
-            showToast("Demolished!", "bg-red-100 text-red-600");
-        } else if (interactionMode === 'BUILD' && selectedTool && !state.grid[x][y]) {
-            const asset = ASSETS[selectedTool];
-            if (state.money >= asset.cost) {
-                state.money -= asset.cost;
-                state.grid[x][y] = { type: selectedTool, height: asset.height };
-                showToast(`Built ${asset.name}`, "bg-blue-100 text-blue-600");
-            } else {
-                showToast("कम पैसे हैं!", "bg-red-100 text-red-600");
+        // जगह चेक करें
+        if(x + asset.size > GRID_SIZE || y + asset.size > GRID_SIZE) {
+            showMessage("सीमा से बाहर!", "red"); return;
+        }
+        for(let i=0; i<asset.size; i++) {
+            for(let j=0; j<asset.size; j++) {
+                if(grid[x+i][y+j] !== null) { showMessage("जगह खाली नहीं है!", "red"); return; }
             }
         }
-        updateUI();
+
+        // पैसे चेक करें
+        if(state.money < asset.cost) { showMessage("पैसे कम हैं!", "red"); return; }
+
+        // प्लेस करें
+        state.money -= asset.cost;
+        grid[x][y] = { type: currentAsset, size: asset.size, name: asset.name };
+        
+        // ब्लॉक करें बाकी सेल्स
+        for(let i=0; i<asset.size; i++) {
+            for(let j=0; j<asset.size; j++) {
+                if(i===0 && j===0) continue;
+                grid[x+i][y+j] = { type: 'BLOCKED', parentX: x, parentY: y };
+            }
+        }
+
+        showMessage(`${asset.name} बनाया गया!`, "green");
+        updateStats();
+        drawGrid();
         saveGame();
+    }
+
+    function handleDelete(x, y) {
+        const grid = getCurrentGrid();
+        const cell = grid[x][y];
+        if(!cell) return;
+
+        let originX = x, originY = y;
+        if(cell.type === 'BLOCKED') {
+            originX = cell.parentX; originY = cell.parentY;
+        }
+
+        const originCell = grid[originX][originY];
+        if(originCell) {
+            const size = originCell.size;
+            // रिफंड (50%) - एसेट का कॉस्ट ढूंढें
+            let cost = 0;
+            const key = Object.keys(ASSETS).find(k => k === originCell.type) || Object.keys(ASSETS).find(k => ASSETS[k].name === originCell.name);
+            if(key) cost = ASSETS[key].cost;
+
+            state.money += Math.floor(cost * 0.5);
+
+            // साफ़ करें
+            for(let i=0; i<size; i++) {
+                for(let j=0; j<size; j++) {
+                    grid[originX+i][originY+j] = null;
+                }
+            }
+            showMessage("हटाया गया (+50% रिफंड)", "blue");
+            updateStats();
+            drawGrid();
+            saveGame();
+        }
     }
 
     function nextTurn() {
         let income = 0;
-        let count = 0;
-        for(let row of state.grid) for(let c of row) if(c && ASSETS[c.type].income) {
-            income += ASSETS[c.type].income;
-            count++;
+        let happyChange = 0;
+        let pDem = 0, pCap = 0, wDem = 0, wCap = 0;
+        
+        const grid = getCurrentGrid();
+        
+        // सारे ग्रिड स्कैन करें (सिर्फ करंट नहीं, सारे मैप्स का लॉजिक होना चाहिए पर अभी सिंपल रखते हैं)
+        // अभी सिर्फ करंट मैप का कैलकुलेशन
+        for(let x=0; x<GRID_SIZE; x++) {
+            for(let y=0; y<GRID_SIZE; y++) {
+                const cell = grid[x][y];
+                if(cell && cell.type !== 'BLOCKED') {
+                    // एसेट डेटा निकालें
+                    let asset = ASSETS[cell.type];
+                    if(!asset) { // पुराने सेव डेटा के लिए
+                        const key = Object.keys(ASSETS).find(k => ASSETS[k].name === cell.name);
+                        if(key) asset = ASSETS[key];
+                    }
+
+                    if(asset) {
+                        income += asset.revenue;
+                        happyChange += asset.happiness;
+                        if(asset.power < 0) pDem += Math.abs(asset.power); else pCap += asset.power;
+                        if(asset.water < 0) wDem += Math.abs(asset.water); else wCap += asset.water;
+                    }
+                }
+            }
         }
+
+        // रूल्स
+        if(pCap < pDem) { happyChange -= 20; showMessage("बिजली कम है!", "red"); }
+        if(wCap < wDem) { happyChange -= 20; showMessage("पानी कम है!", "red"); }
+
+        state.happiness = Math.max(0, Math.min(100, 50 + happyChange));
         
-        // मिनिमम इनकम
-        if(income === 0 && state.money < 100) income = 50; 
-        
+        // पॉपुलेशन टैक्स
+        income += Math.floor(state.population * 1); 
+
         state.money += income;
         state.turn++;
-        updateUI();
+        
+        updateStats();
         saveGame();
-        showToast(`Week ${state.turn}: +₹${income}`, "bg-green-100 text-green-600");
+        if(!document.getElementById('message').innerText.includes("कम")) {
+             showMessage(`हफ्ता खत्म: ₹${income} कमाए`, "green");
+        }
     }
 
-    // ** 10. UI & HELPERS **
-    window.setMode = (mode, key) => {
-        interactionMode = mode;
-        selectedTool = key;
+    function updateStats() {
+        // फिर से कैलकुलेट करें
+        let pop = 0, pDem = 0, wDem = 0;
+        const grid = getCurrentGrid();
         
-        // विजुअल अपडेट
-        document.querySelectorAll('.tool-card').forEach(el => el.classList.remove('active'));
-        document.getElementById('tool-move').classList.remove('active');
-        const infoBar = document.getElementById('info-bar');
+        for(let x=0; x<GRID_SIZE; x++) {
+            for(let y=0; y<GRID_SIZE; y++) {
+                const cell = grid[x][y];
+                if(cell && cell.type !== 'BLOCKED') {
+                     let asset = ASSETS[cell.type];
+                     if(!asset) {
+                        const key = Object.keys(ASSETS).find(k => ASSETS[k].name === cell.name);
+                        if(key) asset = ASSETS[key];
+                     }
+                     if(asset) {
+                         pop += asset.pop;
+                         if(asset.power < 0) pDem += Math.abs(asset.power);
+                         if(asset.water < 0) wDem += Math.abs(asset.water);
+                     }
+                }
+            }
+        }
+        state.population = pop;
+
+        document.getElementById('money_val').innerText = state.money;
+        document.getElementById('pop_val').innerText = state.population;
+        document.getElementById('happiness_val').innerText = state.happiness;
+        document.getElementById('power_val').innerText = pDem;
+        document.getElementById('water_val').innerText = wDem;
+        document.getElementById('turn_val').innerText = state.turn;
+        document.getElementById('currentMapDisplay').innerText = state.currentMap + 1;
+    }
+
+    // --- 4. UI HELPERS ---
+
+    function setupControls() {
+        const div = document.getElementById('controls');
+        div.innerHTML = '';
+        Object.keys(ASSETS).forEach(key => {
+            const btn = document.createElement('button');
+            btn.className = 'asset-button bg-gray-50 hover:bg-gray-100';
+            btn.innerHTML = `${ASSETS[key].name}<br><span class="text-xs text-gray-500">₹${ASSETS[key].cost}</span>`;
+            btn.onclick = () => {
+                currentAsset = key;
+                document.querySelectorAll('.asset-button').forEach(b => b.classList.remove('active-asset'));
+                btn.classList.add('active-asset');
+            };
+            div.appendChild(btn);
+        });
+
+        // डिलीट बटन
+        const delBtn = document.createElement('button');
+        delBtn.className = 'asset-button bg-red-50 text-red-600 border-red-200';
+        delBtn.innerHTML = 'Hatao (X)';
+        delBtn.onclick = () => {
+            currentAsset = 'DELETE';
+            document.querySelectorAll('.asset-button').forEach(b => b.classList.remove('active-asset'));
+            delBtn.classList.add('active-asset');
+        };
+        div.appendChild(delBtn);
+    }
+
+    function showMessage(msg, color) {
+        const el = document.getElementById('message');
+        el.innerText = msg;
+        el.style.display = 'block';
+        el.className = `p-2 rounded text-center text-sm mb-4 ${color === 'red' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`;
+        setTimeout(() => el.style.display = 'none', 2000);
+    }
+
+    // --- 5. EVENTS & SAVE ---
+    
+    canvas.addEventListener('mousedown', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = Math.floor((e.clientX - rect.left) / (rect.width / GRID_SIZE));
+        const y = Math.floor((e.clientY - rect.top) / (rect.height / GRID_SIZE));
+        placeAsset(x, y);
+    });
+
+    // मैप स्विचिंग
+    document.getElementById('openMapBtn').onclick = () => {
+        const list = document.getElementById('mapListContainer');
+        list.innerHTML = '';
+        const costs = [0, 5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000, 45000]; // उदाहरण
         
-        if(mode === 'MOVE') {
-            document.getElementById('tool-move').classList.add('active');
-            infoBar.style.background = '#6b7280';
-            infoBar.innerText = "मैप हिलाने के लिए ड्रैग करें";
-        } else if (mode === 'BUILD') {
-            document.getElementById('btn-'+key).classList.add('active');
-            infoBar.style.background = ASSETS[key].color;
-            infoBar.innerText = `${ASSETS[key].name}: ₹${ASSETS[key].cost}`;
+        for(let i=0; i<TOTAL_MAPS; i++) {
+            const cost = costs[i] || 50000;
+            const div = document.createElement('div');
+            div.className = `flex justify-between p-2 rounded ${i === state.currentMap ? 'bg-blue-100 border-blue-300 border' : 'bg-gray-100'}`;
+            
+            let btnHtml = '';
+            if(i < state.unlockedMaps) {
+                btnHtml = `<button class="bg-blue-500 text-white px-2 rounded text-xs" onclick="window.switchMap(${i})">Go</button>`;
+            } else {
+                btnHtml = `<button class="bg-green-500 text-white px-2 rounded text-xs" onclick="window.unlockMap(${i}, ${cost})">Buy ₹${cost}</button>`;
+            }
+
+            div.innerHTML = `<span>Map ${i+1}</span> ${btnHtml}`;
+            list.appendChild(div);
+        }
+        document.getElementById('mapSelectModal').style.display = 'flex';
+    };
+
+    window.switchMap = (i) => {
+        state.currentMap = i;
+        document.getElementById('mapSelectModal').style.display = 'none';
+        updateStats();
+        drawGrid();
+        saveGame();
+    };
+
+    window.unlockMap = (i, cost) => {
+        if(state.money >= cost) {
+            state.money -= cost;
+            state.unlockedMaps = i + 1;
+            switchMap(i);
         } else {
-            infoBar.style.background = '#ef4444';
-            infoBar.innerText = "तोड़ने के लिए क्लिक करें";
+            alert("पैसे कम हैं!");
         }
     };
 
-    window.resetCamera = () => {
-        state.camera.x = canvas.width / 2;
-        state.camera.y = 150;
-    };
-
-    function updateUI() {
-        document.getElementById('ui-money').innerText = state.money.toLocaleString();
-        document.getElementById('turn-display').innerText = state.turn;
-    }
-
-    function showToast(msg, classes) {
-        const el = document.createElement('div');
-        el.className = `py-2 px-4 rounded-full shadow-lg font-bold mb-2 animate-bounce ${classes}`;
-        el.innerText = msg;
-        document.getElementById('toast-container').appendChild(el);
-        setTimeout(() => el.remove(), 2000);
-    }
-
-    function adjustColor(c, amt) {
-        return '#' + c.replace(/^#/, '').replace(/../g, c => ('0'+Math.min(255, Math.max(0, parseInt(c, 16) + amt)).toString(16)).substr(-2));
-    }
-
+    // सेव/लोड
     function saveGame() {
-        localStorage.setItem('cityEasy_' + gameId, JSON.stringify(state));
+        if(!gameId) return;
+        localStorage.setItem('city2d_' + gameId, JSON.stringify(state));
     }
 
-    function loadGame() {
-        const data = localStorage.getItem('cityEasy_' + gameId);
-        if(data) state = JSON.parse(data);
+    function loadGame(id) {
+        const data = localStorage.getItem('city2d_' + id);
+        if(data) {
+            const parsed = JSON.parse(data);
+            state = { ...state, ...parsed };
+            // ग्रिड डेटा को ठीक करें (JSON में Arrays ऑब्जेक्ट बन सकते हैं कभी कभी)
+            if(!Array.isArray(state.grids)) {
+                 state.grids = Array.from({length: TOTAL_MAPS}, () => Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null)));
+            }
+            return true;
+        }
+        return false;
     }
 
-    // ** 11. STARTUP (बटन और लोडिंग) **
-    
-    // टूल्स बटन बनाना
-    const container = document.getElementById('tools-container');
-    Object.keys(ASSETS).forEach(key => {
-        const a = ASSETS[key];
-        const d = document.createElement('div');
-        d.id = 'btn-'+key;
-        d.className = 'tool-card flex flex-col items-center justify-center min-w-[60px] h-[60px] rounded-xl bg-white border-2 border-transparent';
-        d.innerHTML = `<i class="fas ${a.icon} text-xl" style="color:${a.color}"></i><span class="text-[9px] font-bold text-gray-500 mt-1">${a.name}</span><span class="text-[9px] font-bold text-gray-400">₹${a.cost}</span>`;
-        d.onclick = () => setMode('BUILD', key);
-        container.appendChild(d);
-    });
-
-    // बटन इवेंट्स
-    document.getElementById('btnStart').onclick = () => { gameId = document.getElementById('loginId').value || 'guest'; initGame(true); };
-    document.getElementById('btnLoad').onclick = () => { gameId = document.getElementById('loginId').value || 'guest'; initGame(false); };
-    document.getElementById('btn-next-turn').onclick = nextTurn;
-
-    // अगर विंडो साइज बदले तो कैनवस भी बदले
-    window.addEventListener('resize', checkCanvasSize);
-
-    // पेज लोड होने पर रिसाइज चेक करें
-    window.onload = () => {
-        setTimeout(checkCanvasSize, 100);
+    // स्टार्ट
+    document.getElementById('loginButton').onclick = () => {
+        const val = document.getElementById('loginId').value;
+        if(val) {
+            gameId = val;
+            if(loadGame(val)) {
+                startGame();
+            } else {
+                document.getElementById('loginMessage').innerText = "सेव फ़ाइल नहीं मिली। 'New Game' दबाएं।";
+            }
+        }
     };
 
-</script>
-</body>
+    document.getElementById('newUserButton').onclick = () => {
+        const val = document.getElementById('loginId').value;
+        if(val) {
+            gameId = val;
+            state = { // रीसेट
+                money: 15000, turn: 1, population: 0, happiness: 50, currentMap: 0, unlockedMaps: 1,
+                grids: Array.from({length: TOTAL_MAPS}, () => Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null)))
+            };
+            saveGame();
+            startGame();
+        }
+    };
 
+    function startGame() {
+        document.getElementById('loginModal').style.display = 'none';
+        document.getElementById('mainGameContainer').style.display = 'flex';
+        document.getElementById('userIdDisplay').innerText = gameId;
+        updateStats();
+        drawGrid();
+    }
+
+    document.getElementById('endTurnButton').onclick = nextTurn;
+
+    // init
+    init();
+</script>
+
+</body>
 </html>
