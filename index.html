@@ -2,890 +2,680 @@
 <html lang="hi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>City Builder 3D - Pro Version</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CityBuilder 3D: Isometric Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3909676898216763" crossorigin="anonymous"></script>
     
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f0fdf4; /* Light green Tint */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 10px;
-        }
-        .game-container {
-            display: none;
-            flex-direction: column;
-            gap: 20px;
-            max-width: 1300px;
-            width: 100%;
-        }
-        .grid-canvas {
-            border: none;
-            background-color: #86efac; /* Grass Color Base */
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            border-radius: 16px;
-            width: 100%;
-            height: auto;
-            /* Responsive Aspect Ratio */
-            aspect-ratio: 1 / 1; 
-            cursor: crosshair;
-        }
-        .sidebar {
-            background-color: #ffffff;
-            padding: 24px;
-            border-radius: 16px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            height: fit-content;
-        }
-        .asset-button {
-            padding: 12px 10px;
-            border-radius: 10px;
-            font-weight: 600;
-            transition: all 0.2s;
-            box-shadow: 0 4px 0 #cbd5e1; /* 3D Button look */
-            border: 1px solid #e2e8f0;
-            position: relative;
-            top: 0;
-        }
-        .asset-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 0 #94a3b8;
-        }
-        .asset-button:active {
-            transform: translateY(4px);
-            box-shadow: 0 0 0 #94a3b8;
-            top: 4px;
-        }
-        .active-asset {
-            border: 2px solid #4f46e5;
-            background-color: #e0e7ff;
-            box-shadow: 0 2px 0 #4f46e5;
-            transform: translateY(2px);
-        }
-        .status-box {
-            background-color: #f8fafc;
-            padding: 15px;
-            border-radius: 10px;
-            font-size: 0.95rem;
-            border: 1px solid #e2e8f0;
-        }
-        .message-box {
-            min-height: 40px;
-            padding: 12px;
-            margin-top: 15px;
-            border-radius: 8px;
-            font-weight: 600;
-            text-align: center;
-            transition: opacity 0.3s;
-        }
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(15, 23, 42, 0.7); /* Darker backdrop */
-            backdrop-filter: blur(4px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        .modal-content {
-            background-color: #ffffff;
-            padding: 40px;
-            border-radius: 20px;
-            max-width: 90%;
-            width: 450px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-            max-height: 85vh;
-            overflow-y: auto;
-            text-align: center;
-            border: 1px solid #e2e8f0;
-        }
-        .map-card {
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 12px;
-            text-align: left;
-            transition: all 0.2s;
-            cursor: pointer;
-            border: 2px solid transparent;
-        }
-        .map-card.unlocked:hover {
-            transform: scale(1.02);
+        @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@400;700;900&display=swap');
+        
+        :root {
+            --bg-color: #1e1e2e;
+            --panel-bg: rgba(30, 30, 46, 0.95);
+            --accent: #f59e0b;
         }
 
-        @media (min-width: 1024px) {
-            .game-container {
-                flex-direction: row;
-                align-items: flex-start;
-            }
+        body {
+            font-family: 'Exo 2', sans-serif;
+            background-color: var(--bg-color);
+            color: white;
+            overflow: hidden; /* गेम को फुल स्क्रीन रखने के लिए */
+            touch-action: none;
+        }
+
+        /* UI Overlay Style */
+        .ui-panel {
+            background: var(--panel-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Custom Scrollbar for building list */
+        .scroller::-webkit-scrollbar { width: 6px; }
+        .scroller::-webkit-scrollbar-track { background: transparent; }
+        .scroller::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
+
+        .btn-3d {
+            transition: all 0.1s;
+            border-bottom: 4px solid rgba(0,0,0,0.3);
+        }
+        .btn-3d:active {
+            transform: translateY(2px);
+            border-bottom: 0px solid transparent;
+        }
+
+        /* Canvas Fullscreen */
+        #gameCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            background: radial-gradient(circle at center, #374151 0%, #111827 100%);
+        }
+
+        /* Floating Text Animation */
+        @keyframes floatUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-50px); opacity: 0; }
+        }
+        .floater {
+            position: absolute;
+            pointer-events: none;
+            animation: floatUp 1.5s ease-out forwards;
+            font-weight: bold;
+            text-shadow: 2px 2px 0 #000;
+            z-index: 100;
+        }
+
+        /* Modal styling */
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(5px);
         }
     </style>
 </head>
-<body class="bg-gray-50 text-slate-800">
+<body>
 
-<div id="loginModal" class="modal">
-    <div class="modal-content">
-        <div class="mb-6">
-            <h2 class="text-4xl font-extrabold text-indigo-600 tracking-tight">City Builder</h2>
-            <p class="text-gray-400 text-sm mt-1">Version 2.0 (Enhanced)</p>
+<canvas id="gameCanvas"></canvas>
+
+<div class="absolute top-0 left-0 w-full p-4 flex justify-between items-start pointer-events-none z-10">
+    <div class="ui-panel p-3 rounded-2xl flex gap-6 pointer-events-auto">
+        <div class="text-center">
+            <div class="text-xs text-gray-400 uppercase tracking-widest">Funds</div>
+            <div class="text-2xl font-black text-green-400">₹<span id="ui-money">0</span></div>
         </div>
-        
-        <p class="text-sm text-gray-500 mb-6">अपनी प्रगति को क्लाउड पर सुरक्षित रखने के लिए लॉगिन करें।</p>
-        
-        <input type="text" id="loginId" placeholder="User ID (e.g. amit123)" class="w-full p-3 mb-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition" maxlength="20">
-        <input type="password" id="loginPassword" placeholder="Password" class="w-full p-3 mb-6 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition" value="secret" onfocus="this.select()">
+        <div class="text-center border-l border-gray-600 pl-4">
+            <div class="text-xs text-gray-400 uppercase tracking-widest">Pop</div>
+            <div class="text-2xl font-black text-blue-400" id="ui-pop">0</div>
+        </div>
+        <div class="text-center border-l border-gray-600 pl-4 hidden sm:block">
+            <div class="text-xs text-gray-400 uppercase tracking-widest">Happy</div>
+            <div class="text-2xl font-black text-pink-500"><span id="ui-happy">50</span>%</div>
+        </div>
+        <div class="text-center border-l border-gray-600 pl-4 hidden sm:block">
+            <div class="text-xs text-gray-400 uppercase tracking-widest">Day</div>
+            <div class="text-xl font-bold text-yellow-400" id="ui-day">1</div>
+        </div>
+    </div>
 
-        <div id="loginMessage" class="message-box hidden mb-4"></div>
-
-        <button id="loginButton" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-xl font-bold transition duration-150 shadow-md mb-3 transform active:scale-95">
-            Load Game
+    <div class="flex gap-2 pointer-events-auto">
+        <button id="btn-night" class="ui-panel w-12 h-12 rounded-full flex items-center justify-center hover:bg-white/10 transition">
+            🌙
         </button>
-        <button id="newUserButton" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white p-3 rounded-xl font-bold transition duration-150 shadow-md transform active:scale-95">
-            New Game
+        <button onclick="document.getElementById('instructionsModal').classList.remove('hidden')" class="ui-panel w-12 h-12 rounded-full flex items-center justify-center hover:bg-white/10 transition">
+            ?
+        </button>
+        <button id="btn-save" class="ui-panel px-4 h-12 rounded-full font-bold hover:bg-green-600/20 text-green-400 transition border-green-900">
+            SAVE
         </button>
     </div>
 </div>
 
-<div class="game-container" id="mainGameContainer">
-    <div class="sidebar lg:w-1/3 flex flex-col gap-5">
+<div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-[95%] max-w-4xl z-10 flex flex-col gap-2 pointer-events-none">
+    
+    <div id="game-message" class="text-center text-yellow-300 font-bold text-lg drop-shadow-md opacity-0 transition-opacity duration-500"></div>
+
+    <div class="ui-panel p-2 rounded-2xl flex items-center gap-2 pointer-events-auto overflow-x-auto scroller">
+        <div id="building-list" class="flex gap-2">
+            </div>
         
-        <div class="flex justify-between items-center border-b pb-4">
-             <div>
-                <h1 class="text-2xl font-bold text-gray-800">My City</h1>
-                <div id="userIdDisplay" class="text-xs font-mono text-indigo-500 mt-1">Guest</div>
-             </div>
-             <div class="text-right">
-                <span class="block text-xs text-gray-400">TURN</span>
-                <span id="turn_val" class="text-2xl font-black text-indigo-600">1</span>
-             </div>
-        </div>
-
-        <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 flex justify-between items-center">
-            <div>
-                <span class="text-xs text-indigo-400 uppercase font-bold">Current Map</span>
-                <div class="text-lg font-bold text-indigo-700">Level <span id="currentMapDisplay">1</span> / 20</div>
-            </div>
-            <button id="openMapSelectModalButton" class="bg-white hover:bg-gray-50 text-indigo-600 border border-indigo-200 text-sm py-2 px-4 rounded-lg font-semibold transition shadow-sm">
-                Change Map
-            </button>
-        </div>
-
-        <div class="status-box space-y-2 shadow-inner">
-            <div class="flex justify-between border-b border-gray-200 pb-1">
-                <span class="text-gray-500">Funds</span>
-                <span class="font-bold text-green-600">₹ <span id="money_val">0</span></span>
-            </div>
-            <div class="flex justify-between border-b border-gray-200 pb-1">
-                <span class="text-gray-500">Population</span>
-                <span class="font-bold text-blue-600" id="pop_val">0</span>
-            </div>
-            <div class="flex justify-between border-b border-gray-200 pb-1">
-                <span class="text-gray-500">Electricity</span>
-                <span class="font-bold text-yellow-600"><span id="power_val">0</span> / <span id="power_cap_val">0</span></span>
-            </div>
-            <div class="flex justify-between border-b border-gray-200 pb-1">
-                <span class="text-gray-500">Water</span>
-                <span class="font-bold text-cyan-600"><span id="water_val">0</span> / <span id="water_cap_val">0</span></span>
-            </div>
-            <div class="flex justify-between pt-1">
-                <span class="text-gray-500">Happiness</span>
-                <span class="font-bold text-pink-500"><span id="happiness_val">0</span>%</span>
-            </div>
-        </div>
-
-        <div>
-            <h2 class="text-sm font-bold text-gray-400 uppercase mb-3 tracking-wider">Construction</h2>
-            <div id="controls" class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                </div>
-        </div>
+        <div class="w-[1px] h-10 bg-gray-600 mx-2"></div>
         
-        <div id="message" class="message-box bg-red-100 text-red-700 hidden"></div>
+        <button onclick="setTool('DELETE')" class="btn-3d min-w-[60px] h-[60px] rounded-xl bg-red-600 hover:bg-red-500 flex flex-col items-center justify-center relative group">
+            <span class="text-xl">💣</span>
+        </button>
         
-        <div class="grid grid-cols-2 gap-3 mt-auto">
-            <button id="instructionsButton" class="bg-amber-400 hover:bg-amber-500 text-white p-3 rounded-xl font-bold shadow-md transition transform active:scale-95">
-                Rules
-            </button>
-            <button id="samjhoButton" class="bg-teal-500 hover:bg-teal-600 text-white p-3 rounded-xl font-bold shadow-md transition transform active:scale-95">
-                Boost
-            </button>
-            <button id="endTurnButton" class="col-span-2 bg-indigo-600 hover:bg-indigo-700 text-white p-4 rounded-xl font-bold shadow-lg transition transform active:scale-95 text-lg">
-               End Turn (Next Week)
-            </button>
-        </div>
-    </div>
-
-    <div class="lg:w-2/3 flex justify-center items-start pt-4">
-        <div class="relative w-full max-w-[800px]">
-            <canvas id="cityCanvas" class="grid-canvas"></canvas>
-        </div>
+        <button id="btn-next-turn" class="btn-3d min-w-[100px] h-[60px] rounded-xl bg-indigo-600 hover:bg-indigo-500 flex flex-col items-center justify-center ml-auto px-4">
+            <span class="text-xs uppercase opacity-70">Finish</span>
+            <span class="font-black text-lg">WEEK</span>
+        </button>
     </div>
 </div>
 
-<div id="mapSelectModal" class="modal hidden">
-    <div class="modal-content text-left">
-        <h2 class="text-2xl font-bold mb-2 text-gray-800">Select Region</h2>
-        <p class="text-sm text-gray-500 mb-4 border-b pb-4">Unlock new territories to expand your empire.</p>
+<div id="loginModal" class="modal-overlay fixed inset-0 flex items-center justify-center z-50">
+    <div class="ui-panel p-8 rounded-3xl max-w-sm w-full text-center">
+        <h1 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 mb-2">CITY 3D</h1>
+        <p class="text-gray-400 mb-6 text-sm">Isometric Construction Simulator</p>
         
-        <div id="mapListContainer" class="max-h-[300px] overflow-y-auto pr-2 space-y-2">
-            </div>
-
-        <button onclick="closeMapSelectModal()" class="mt-6 w-full bg-gray-200 hover:bg-gray-300 text-gray-800 p-3 rounded-xl font-bold transition">Close</button>
+        <input type="text" id="loginId" placeholder="Enter City Name (User ID)" class="w-full bg-gray-900 border border-gray-700 text-white p-4 rounded-xl mb-4 focus:border-blue-500 outline-none">
+        
+        <div class="grid grid-cols-2 gap-3">
+            <button id="btnLogin" class="btn-3d bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-bold">LOAD</button>
+            <button id="btnNew" class="btn-3d bg-emerald-600 hover:bg-emerald-500 py-3 rounded-xl font-bold">NEW</button>
+        </div>
+        <p id="loginMsg" class="mt-4 text-xs text-red-400 h-4"></p>
     </div>
 </div>
 
-<div id="instructionsModal" class="modal hidden">
-    <div class="modal-content text-left">
-        <h2 class="text-2xl font-bold mb-4 text-gray-800 border-b pb-2">How to Play</h2>
-        <div class="text-gray-600 space-y-4 text-sm">
-            <p><strong>Goal:</strong> Build a thriving metropolis. Balance power, water, and happiness to grow population.</p>
-            <div class="bg-indigo-50 p-3 rounded-lg">
-                <h3 class="font-bold text-indigo-700 mb-1">Controls</h3>
-                <ul class="list-disc list-inside ml-2">
-                    <li>Select a building from the sidebar.</li>
-                    <li>Click on the green grid to place it.</li>
-                    <li>Click 'End Turn' to collect taxes and proceed.</li>
-                </ul>
-            </div>
-            <div>
-                <h3 class="font-bold text-gray-800">Tips:</h3>
-                <ul class="list-disc list-inside ml-2 text-gray-500">
-                    <li>Houses need Power and Water.</li>
-                    <li>Factories earn money but reduce happiness.</li>
-                    <li>Unlock new maps when you have enough cash.</li>
-                </ul>
-            </div>
-        </div>
-        <button onclick="closeInstructionsModal()" class="mt-6 w-full bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-xl font-bold transition">Got it</button>
+<div id="instructionsModal" class="modal-overlay fixed inset-0 flex items-center justify-center z-50 hidden">
+    <div class="ui-panel p-8 rounded-3xl max-w-md w-full relative">
+        <button onclick="this.closest('.fixed').classList.add('hidden')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl">&times;</button>
+        <h2 class="text-2xl font-bold text-white mb-4">How to Play</h2>
+        <ul class="space-y-3 text-gray-300 text-sm">
+            <li class="flex gap-2"><span class="text-blue-400">➤</span> Select a building from the bottom bar.</li>
+            <li class="flex gap-2"><span class="text-blue-400">➤</span> Click on the grid to build (Cost is deducted).</li>
+            <li class="flex gap-2"><span class="text-blue-400">➤</span> <b>Houses</b> need Power & Water nearby.</li>
+            <li class="flex gap-2"><span class="text-blue-400">➤</span> <b>Industry</b> makes money but pollution reduces happiness.</li>
+            <li class="flex gap-2"><span class="text-blue-400">➤</span> Click <b>WEEK</b> to collect taxes and grow population.</li>
+            <li class="flex gap-2"><span class="text-yellow-400">★</span> <b>Pro Tip:</b> Rotate your phone for better view!</li>
+        </ul>
     </div>
 </div>
 
 <script type="module">
-    // ** Firebase Imports **
+    // --- Firebase Logic (Preserved but simplified for readability) ---
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // ** Configuration **
-    const LOCAL_STORAGE_KEY = 'cityBuilderSave_';
-    // Fallback if variables aren't injected by server
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'city-builder-v2';
+    const APP_ID = 'citybuilder-iso-v1';
     const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
-    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+    let db, user, gameId;
 
-    let app, db, auth;
-    let isAuthReady = false;
-    let isGameActive = false;
-    let isCloudSavingEnabled = false; 
-    let customGameId = null; 
-    
-    // ** Game Constants **
-    const CANVAS_SIZE = 800;
-    const GRID_SIZE = 20;
-    const TILE_SIZE = CANVAS_SIZE / GRID_SIZE;
-    const TOTAL_MAPS = 20;
-
-    const canvas = document.getElementById('cityCanvas');
-    const ctx = canvas.getContext('2d');
-    
-    // Canvas setup for crisp rendering on high DPI screens
-    function resizeCanvas() {
-        const containerWidth = canvas.parentElement.clientWidth;
-        // Keep internal resolution high, but display size responsive
-        canvas.width = CANVAS_SIZE; 
-        canvas.height = CANVAS_SIZE; 
-    }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-
-    const MAP_UNLOCK_COSTS = Array.from({ length: TOTAL_MAPS }, (_, i) => i * 5000); 
-
-    // ** UPDATED ASSETS (Added colors for gradients) **
-    const ASSET_TYPES = {
-        HOUSE: {
-            name: 'Home', cost: 100, size: 1, power: -2, water: -2, pop: 10, revenue: 5, happiness: 1,
-            color: '#fcd34d', colorDark: '#d97706', text: '🏠'
-        },
-        POWER_PLANT: {
-            name: 'Power', cost: 500, size: 2, power: 50, water: -10, pop: 0, revenue: 0, happiness: -5,
-            color: '#34d399', colorDark: '#059669', text: '⚡'
-        },
-        WATER_TOWER: {
-            name: 'Water', cost: 300, size: 1, power: 0, water: 30, pop: 0, revenue: 0, happiness: 0,
-            color: '#60a5fa', colorDark: '#2563eb', text: '💧'
-        },
-        ROAD: {
-            name: 'Road', cost: 20, size: 1, power: 0, water: 0, pop: 0, revenue: 0, happiness: 0,
-            color: '#475569', colorDark: '#1e293b', text: ''
-        },
-        SCHOOL: {
-            name: 'School', cost: 500, size: 2, power: -10, water: -10, pop: 0, revenue: -10, happiness: 15,
-            color: '#fb923c', colorDark: '#c2410c', text: '🎓'
-        },
-        FACTORY: {
-            name: 'Factory', cost: 2000, size: 3, power: -50, water: -50, pop: 0, revenue: 80, happiness: -30,
-            color: '#94a3b8', colorDark: '#475569', text: '🏭'
-        },
-        HOSPITAL: {
-            name: 'Hospital', cost: 7500, size: 3, power: -50, water: -50, pop: 0, revenue: -75, happiness: 80,
-            color: '#f87171', colorDark: '#dc2626', text: '🏥' 
-        },
-        MALL: {
-            name: 'Mall', cost: 10000, size: 4, power: -60, water: -60, pop: 0, revenue: 250, happiness: 60,
-            color: '#e879f9', colorDark: '#a21caf', text: '🛍️'
-        },
-        PARLIAMENT: {
-            name: 'Govt.', cost: 15000, size: 4, power: -40, water: -40, pop: 0, revenue: -100, happiness: 100,
-            color: '#a5b4fc', colorDark: '#4338ca', text: '🏛️' 
-        }
-    };
-
-    const DEFAULT_STATE = {
-        money: 15000, 
-        turn: 1,
-        population: 0,
-        powerCapacity: 0,
-        powerDemand: 0,
-        waterCapacity: 0,
-        waterDemand: 0,
-        totalHappiness: 50,
-        currentAsset: null,
-        message: '',
-        messageTimer: null,
-        lastMouseX: 0,
-        lastMouseY: 0,
-        currentMapIndex: 0,
-        unlockedMaps: 1,
-    };
-
-    const createEmptyGrid = () => Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null));
-    let allGrids = Array.from({ length: TOTAL_MAPS }, createEmptyGrid);
-    let gameState = { ...DEFAULT_STATE };
-
-    // Track mouse grid position to avoid excessive redraws
-    let lastGridX = -1;
-    let lastGridY = -1;
-
-    function getCurrentGrid() {
-        return allGrids[gameState.currentMapIndex];
-    }
-
-    // ** Firebase & Storage Logic **
-    function getGameSaveDocRef(userId) {
-        return doc(db, 'artifacts', appId, 'public', 'data', 'game_saves', userId);
-    }
-    
     async function initFirebase() {
-        if (!firebaseConfig) {
-             console.warn("No Firebase Config. Using LocalStorage.");
-             isAuthReady = true;
-             isCloudSavingEnabled = false;
-             document.getElementById('loginButton').disabled = false;
-             document.getElementById('newUserButton').disabled = false;
-             return;
-        }
+        if (!firebaseConfig) return false;
         try {
-            app = initializeApp(firebaseConfig);
+            const app = initializeApp(firebaseConfig);
             db = getFirestore(app);
-            auth = getAuth(app);
-            if (initialAuthToken) await signInWithCustomToken(auth, initialAuthToken);
-            else await signInAnonymously(auth);
-
-            onAuthStateChanged(auth, (user) => {
-                isAuthReady = true;
-                isCloudSavingEnabled = !!user;
-                document.getElementById('loginButton').disabled = false;
-                document.getElementById('newUserButton').disabled = false;
-            });
-        } catch (error) {
-            console.error("Firebase Error:", error);
-            isAuthReady = true;
-            isCloudSavingEnabled = false;
-            document.getElementById('loginButton').disabled = false;
-            document.getElementById('newUserButton').disabled = false;
-        }
+            const auth = getAuth(app);
+            const cred = await signInAnonymously(auth);
+            user = cred.user;
+            return true;
+        } catch (e) { console.error(e); return false; }
     }
+    const hasCloud = await initFirebase();
 
-    async function saveGame() {
-        if (!customGameId) return;
-        const allGridsString = JSON.stringify(allGrids);
-        const dataToSave = {
-            ...gameState,
-            allGrids: allGridsString,
-            lastSaved: new Date().toISOString()
-        };
+    // --- GAME ENGINE ---
+    
+    // Config
+    const MAP_SIZE = 24; // Larger map
+    const TILE_WIDTH = 64;
+    const TILE_HEIGHT = 32; // Isometric ratio 2:1
+    
+    // Assets & Data
+    const BUILDINGS = {
+        road:     { name: 'Road',   cost: 50,    color: '#475569', height: 2,  type: 'deco' },
+        house:    { name: 'House',  cost: 150,   color: '#fcd34d', height: 15, type: 'res', pop: 4, income: 10 },
+        apt:      { name: 'Apt.',   cost: 400,   color: '#f59e0b', height: 35, type: 'res', pop: 12, income: 25 },
+        park:     { name: 'Park',   cost: 200,   color: '#4ade80', height: 4,  type: 'deco', happy: 5 },
+        power:    { name: 'Power',  cost: 600,   color: '#ef4444', height: 20, type: 'util', power: 50 },
+        water:    { name: 'Water',  cost: 500,   color: '#3b82f6', height: 25, type: 'util', water: 50 },
+        factory:  { name: 'Factory',cost: 1500,  color: '#64748b', height: 25, type: 'ind', income: 100, happy: -10 },
+        tower:    { name: 'Tower',  cost: 5000,  color: '#8b5cf6', height: 60, type: 'com', income: 300, happy: 5 },
+        monument: { name: 'Statue', cost: 10000, color: '#fbbf24', height: 50, type: 'deco', happy: 20 }
+    };
+
+    let state = {
+        money: 5000,
+        pop: 0,
+        happiness: 50,
+        turn: 1,
+        grid: [], // 2D array storing { type, variant }
+        camera: { x: 0, y: 0, zoom: 1 },
+        isNight: false
+    };
+    
+    // Input State
+    let selectedTool = null;
+    let hoveredTile = { x: -1, y: -1 };
+    let isDragging = false;
+    let lastMouse = { x: 0, y: 0 };
+
+    // Initialization
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d', { alpha: false }); // Optimization
+    
+    function initGame(id, isNew) {
+        gameId = id;
+        state.grid = Array(MAP_SIZE).fill().map(() => Array(MAP_SIZE).fill(null));
         
-        // Remove non-serializable fields
-        delete dataToSave.messageTimer;
-        
-        if (isCloudSavingEnabled) {
-            try {
-                await setDoc(getGameSaveDocRef(customGameId), dataToSave, { merge: false });
-            } catch (error) {
-                localStorage.setItem(LOCAL_STORAGE_KEY + customGameId, JSON.stringify(dataToSave));
+        if (isNew) {
+            // Seed some trees/rocks
+            for(let i=0; i<15; i++) {
+                const rx = Math.floor(Math.random()*MAP_SIZE);
+                const ry = Math.floor(Math.random()*MAP_SIZE);
+                state.grid[rx][ry] = { type: 'tree', height: 10 + Math.random()*10 };
             }
         } else {
-            localStorage.setItem(LOCAL_STORAGE_KEY + customGameId, JSON.stringify(dataToSave));
-        }
-    }
-
-    async function loadGame(userId) {
-        if (!userId) return false;
-        let savedData = null;
-        
-        if (isCloudSavingEnabled) {
-            try {
-                const docSnap = await getDoc(getGameSaveDocRef(userId));
-                if (docSnap.exists()) savedData = docSnap.data();
-            } catch (e) { console.warn("Cloud load failed"); }
-        }
-
-        if (!savedData) {
-            const localData = localStorage.getItem(LOCAL_STORAGE_KEY + userId);
-            if (localData) savedData = JSON.parse(localData);
+            loadState();
         }
         
-        if (savedData) {
-            // Restore state carefully
-            Object.keys(DEFAULT_STATE).forEach(key => {
-                if(savedData[key] !== undefined) gameState[key] = savedData[key];
-            });
+        // Center Camera
+        state.camera.x = window.innerWidth / 2;
+        state.camera.y = 100;
 
-            try {
-                 const loadedGrids = JSON.parse(savedData.allGrids);
-                 if (Array.isArray(loadedGrids)) allGrids = loadedGrids;
-            } catch (e) { console.error("Grid Parse Error"); }
-            
-            updateMetrics();
-            drawGrid();
-            updateMapDisplay();
-            return true;
-        } 
-        return false; 
-    }
-    
-    // ** Map Logic **
-    function updateMapDisplay() {
-        document.getElementById('currentMapDisplay').textContent = gameState.currentMapIndex + 1;
+        startGameLoop();
+        updateUI();
+        document.getElementById('loginModal').classList.add('hidden');
     }
 
-    function openMapSelectModal() {
-        const container = document.getElementById('mapListContainer');
-        container.innerHTML = '';
-
-        for (let i = 0; i < TOTAL_MAPS; i++) {
-            const cost = MAP_UNLOCK_COSTS[i];
-            const isUnlocked = i < gameState.unlockedMaps;
-            const isCurrent = i === gameState.currentMapIndex;
-
-            const card = document.createElement('div');
-            card.className = `map-card flex justify-between items-center ${isCurrent ? 'bg-indigo-50 border-indigo-500' : isUnlocked ? 'bg-white border-gray-200 hover:bg-gray-50' : 'bg-gray-100 opacity-70'}`;
-            
-            let actionBtn = '';
-            if(!isCurrent) {
-                if(isUnlocked) {
-                    actionBtn = `<button class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded text-sm font-bold" onclick="changeMap(${i})">Visit</button>`;
-                } else {
-                    actionBtn = `<button class="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1 rounded text-sm font-bold" ${gameState.money >= cost ? '' : 'disabled'} onclick="unlockMap(${i})">Buy ₹${cost/1000}k</button>`;
-                }
-            } else {
-                actionBtn = `<span class="text-xs font-bold text-indigo-600 bg-indigo-100 px-2 py-1 rounded">ACTIVE</span>`;
-            }
-
-            card.innerHTML = `
-                <div>
-                    <h4 class="text-lg font-bold text-gray-800">Region ${i + 1}</h4>
-                    <p class="text-xs text-gray-500">${isUnlocked ? 'Owned' : 'Locked'}</p>
-                </div>
-                ${actionBtn}
-            `;
-            container.appendChild(card);
-        }
-        document.getElementById('mapSelectModal').classList.remove('hidden');
+    // --- ISOMETRIC MATH ---
+    // Convert Grid (x,y) to Screen (px,py)
+    function isoToScreen(x, y) {
+        return {
+            x: (x - y) * TILE_WIDTH * 0.5 + state.camera.x,
+            y: (x + y) * TILE_HEIGHT * 0.5 + state.camera.y
+        };
     }
 
-    async function changeMap(newIndex) {
-        if (newIndex < 0 || newIndex >= gameState.unlockedMaps) return;
-        gameState.currentMapIndex = newIndex;
-        updateMetrics(); 
-        drawGrid();
-        updateMapDisplay();
-        document.getElementById('mapSelectModal').classList.add('hidden');
-        await saveGame();
-    }
-
-    async function unlockMap(index) {
-        const cost = MAP_UNLOCK_COSTS[index];
-        if (gameState.money >= cost) {
-            gameState.money -= cost;
-            gameState.unlockedMaps++;
-            await changeMap(index);
-        }
-    }
-
-    // ** Gameplay Logic **
-    function checkCanPlace(startX, startY, size) {
-        const currentGrid = getCurrentGrid();
-        if (startX + size > GRID_SIZE || startY + size > GRID_SIZE) return false;
-        for (let x = startX; x < startX + size; x++) {
-            for (let y = startY; y < startY + size; y++) {
-                if (currentGrid[x][y] !== null) return false;
-            }
-        }
-        return true;
-    }
-
-    async function placeAsset(startX, startY, assetType) {
-        const currentGrid = getCurrentGrid();
-        const size = assetType.size;
+    // Convert Screen (px,py) to Grid (x,y) - Approx
+    function screenToIso(sx, sy) {
+        const adjX = sx - state.camera.x;
+        const adjY = sy - state.camera.y;
         
-        currentGrid[startX][startY] = { type: assetType.name, x: startX, y: startY, size: size };
-        for (let x = startX; x < startX + size; x++) {
-            for (let y = startY; y < startY + size; y++) {
-                if (x === startX && y === startY) continue; 
-                currentGrid[x][y] = { type: 'BLOCKED', parentX: startX, parentY: startY };
-            }
-        }
-        gameState.money -= assetType.cost;
-        updateMetrics();
-        drawGrid(); 
-        await saveGame();
+        // Inverse matrix logic
+        // y_iso = (2*adjY - adjX / (TW/TH * 2)) ... simplified:
+        const gy = (adjY / (TILE_HEIGHT * 0.5) - adjX / (TILE_WIDTH * 0.5)) / 2;
+        const gx = (adjY / (TILE_HEIGHT * 0.5) + adjX / (TILE_WIDTH * 0.5)) / 2;
+        
+        return { x: Math.floor(gx), y: Math.floor(gy) };
     }
 
-    // ** IMPROVED DRAWING SYSTEM **
+    // --- RENDERING ---
+    function draw() {
+        // 1. Clear & Background
+        ctx.fillStyle = state.isNight ? '#0f172a' : '#1e293b'; 
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    function drawGrid() {
-        const currentGrid = getCurrentGrid();
-        // Clear with background color
-        ctx.fillStyle = '#86efac'; 
-        ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+        // 2. Draw Tiles (Back to Front painter's algo)
+        for (let x = 0; x < MAP_SIZE; x++) {
+            for (let y = 0; y < MAP_SIZE; y++) {
+                drawTile(x, y);
+            }
+        }
 
-        // Draw Grid Lines (Subtle)
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-        ctx.lineWidth = 1;
+        // 3. Draw Cursor Selection
+        if (hoveredTile.x >= 0 && hoveredTile.x < MAP_SIZE && hoveredTile.y >= 0 && hoveredTile.y < MAP_SIZE) {
+            drawCursor(hoveredTile.x, hoveredTile.y);
+        }
+    }
+
+    function drawTile(x, y) {
+        const pos = isoToScreen(x, y);
+        
+        // Cull off-screen tiles for performance
+        if (pos.x < -100 || pos.x > canvas.width + 100 || pos.y < -100 || pos.y > canvas.height + 100) return;
+
+        // Base Tile (Ground)
         ctx.beginPath();
-        for (let i = 0; i <= GRID_SIZE; i++) {
-            const pos = i * TILE_SIZE;
-            ctx.moveTo(pos, 0); ctx.lineTo(pos, CANVAS_SIZE);
-            ctx.moveTo(0, pos); ctx.lineTo(CANVAS_SIZE, pos);
-        }
+        ctx.moveTo(pos.x, pos.y);
+        ctx.lineTo(pos.x + TILE_WIDTH/2, pos.y + TILE_HEIGHT/2);
+        ctx.lineTo(pos.x, pos.y + TILE_HEIGHT);
+        ctx.lineTo(pos.x - TILE_WIDTH/2, pos.y + TILE_HEIGHT/2);
+        ctx.closePath();
+
+        // Ground Color
+        const isHover = x === hoveredTile.x && y === hoveredTile.y;
+        let color = state.isNight ? '#1e293b' : '#334155'; // Dark blue-grey ground
+        if (isHover) color = '#475569';
+        
+        ctx.fillStyle = color;
+        ctx.fill();
+        
+        // Grid Lines (Subtle)
+        ctx.strokeStyle = state.isNight ? '#334155' : '#475569';
+        ctx.lineWidth = 0.5;
         ctx.stroke();
 
-        // Draw Assets
-        for (let x = 0; x < GRID_SIZE; x++) {
-            for (let y = 0; y < GRID_SIZE; y++) {
-                const tile = currentGrid[x][y];
-                if (tile && tile.type !== 'BLOCKED') {
-                    const assetType = Object.values(ASSET_TYPES).find(a => a.name === tile.type);
-                    if (assetType) {
-                        drawFancyAsset(x * TILE_SIZE, y * TILE_SIZE, assetType, tile.size);
-                    }
-                }
+        // Content
+        const cell = state.grid[x][y];
+        
+        // If placing a building, show ghost
+        if (isHover && selectedTool && selectedTool !== 'DELETE') {
+            const b = BUILDINGS[selectedTool];
+            drawBlock(pos.x, pos.y, b.color, b.height, true);
+        }
+        
+        // Draw actual building
+        if (cell) {
+            if (cell.type === 'tree') {
+                drawTree(pos.x, pos.y);
+            } else {
+                const b = BUILDINGS[cell.type];
+                if(b) drawBlock(pos.x, pos.y, b.color, b.height, false);
             }
         }
     }
 
-    function drawFancyAsset(x, y, assetType, size) {
-        const drawSize = TILE_SIZE * size;
-        const padding = 4;
-        const rectX = x + padding;
-        const rectY = y + padding;
-        const rectW = drawSize - (padding * 2);
-        const rectH = drawSize - (padding * 2);
-
-        // Shadow
-        ctx.fillStyle = 'rgba(0,0,0,0.2)';
-        ctx.fillRect(rectX + 4, rectY + 4, rectW, rectH);
-
-        // Gradient Body
-        const grd = ctx.createLinearGradient(rectX, rectY, rectX, rectY + rectH);
-        grd.addColorStop(0, assetType.color);
-        grd.addColorStop(1, assetType.colorDark || assetType.color);
+    function drawBlock(ox, oy, color, height, isGhost) {
+        const topY = oy - height;
         
-        ctx.fillStyle = grd;
-        // Rounded corners helper could go here, but simple rect for speed
-        ctx.fillRect(rectX, rectY, rectW, rectH);
-        
-        // Inner Highlight (Bevel effect)
-        ctx.strokeStyle = 'rgba(255,255,255,0.4)';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(rectX + 2, rectY + 2, rectW - 4, rectH - 4);
+        // Helper to adjust color brightness
+        const shade = (col, amt) => {
+            if(isGhost) return col;
+            // Simple hex manipulation or just return darker variants
+            // For simplicity using hardcoded shading logic by drawing semi-transparent black overlays
+            return col;
+        };
 
-        // Icon/Text
-        ctx.fillStyle = '#ffffff';
-        ctx.font = `${Math.floor(drawSize / 2.5)}px sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.shadowColor = 'rgba(0,0,0,0.3)';
-        ctx.shadowBlur = 4;
-        ctx.fillText(assetType.text, x + drawSize / 2, y + drawSize / 2);
+        ctx.globalAlpha = isGhost ? 0.6 : 1.0;
         
-        // Reset Shadow
-        ctx.shadowColor = 'transparent';
-        ctx.shadowBlur = 0;
+        // 1. Right Face (Darkest)
+        ctx.fillStyle = color; // Base
+        ctx.beginPath();
+        ctx.moveTo(ox, oy + TILE_HEIGHT);
+        ctx.lineTo(ox + TILE_WIDTH/2, oy + TILE_HEIGHT/2);
+        ctx.lineTo(ox + TILE_WIDTH/2, topY + TILE_HEIGHT/2);
+        ctx.lineTo(ox, topY + TILE_HEIGHT);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = 'rgba(0,0,0,0.3)'; // Shadow
+        ctx.fill();
+
+        // 2. Left Face (Mid)
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(ox, oy + TILE_HEIGHT);
+        ctx.lineTo(ox - TILE_WIDTH/2, oy + TILE_HEIGHT/2);
+        ctx.lineTo(ox - TILE_WIDTH/2, topY + TILE_HEIGHT/2);
+        ctx.lineTo(ox, topY + TILE_HEIGHT);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = 'rgba(0,0,0,0.1)'; // Slight Shadow
+        ctx.fill();
+
+        // 3. Top Face (Lightest)
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(ox, topY);
+        ctx.lineTo(ox + TILE_WIDTH/2, topY + TILE_HEIGHT/2);
+        ctx.lineTo(ox, topY + TILE_HEIGHT);
+        ctx.lineTo(ox - TILE_WIDTH/2, topY + TILE_HEIGHT/2);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Highlight edge
+        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+        ctx.stroke();
+
+        // Windows (Night Mode)
+        if(state.isNight && !isGhost && height > 10) {
+            ctx.fillStyle = '#fef3c7'; // Yellow light
+            const wx = ox - TILE_WIDTH/4;
+            const wy = topY + TILE_HEIGHT + 5;
+            if(Math.random() > 0.5) ctx.fillRect(wx, wy, 4, 6);
+        }
+
+        ctx.globalAlpha = 1.0;
     }
 
-    function drawPreview(gridX, gridY) {
-        // Redraw base grid first to clear previous preview
-        drawGrid();
+    function drawTree(ox, oy) {
+        const topY = oy - 20;
+        ctx.fillStyle = '#166534'; // Trunk/Base
+        ctx.beginPath();
+        ctx.arc(ox, oy + 10, 6, 0, Math.PI*2);
+        ctx.fill();
+        
+        ctx.fillStyle = '#22c55e'; // Leaves
+        ctx.beginPath();
+        ctx.moveTo(ox, topY);
+        ctx.lineTo(ox + 10, oy + 5);
+        ctx.lineTo(ox - 10, oy + 5);
+        ctx.closePath();
+        ctx.fill();
+    }
 
-        if (!gameState.currentAsset || gridX < 0 || gridX >= GRID_SIZE || gridY < 0 || gridY >= GRID_SIZE) return;
+    function drawCursor(gx, gy) {
+        const pos = isoToScreen(gx, gy);
+        ctx.strokeStyle = selectedTool === 'DELETE' ? '#ef4444' : '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
+        ctx.lineTo(pos.x + TILE_WIDTH/2, pos.y + TILE_HEIGHT/2);
+        ctx.lineTo(pos.x, pos.y + TILE_HEIGHT);
+        ctx.lineTo(pos.x - TILE_WIDTH/2, pos.y + TILE_HEIGHT/2);
+        ctx.closePath();
+        ctx.stroke();
+    }
 
-        if (gameState.currentAsset === 'DELETE') {
-            ctx.fillStyle = 'rgba(239, 68, 68, 0.5)'; // Red overlay
-            ctx.fillRect(gridX * TILE_SIZE, gridY * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-            ctx.strokeStyle = 'red';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(gridX * TILE_SIZE, gridY * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+    // --- GAME LOGIC ---
+
+    function handleInput(type, e) {
+        if(type === 'move') {
+            const rect = canvas.getBoundingClientRect();
+            // Handle touch or mouse
+            const cx = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+            const cy = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+
+            // Pan Camera (Right Click or Touch Drag)
+            if (isDragging) {
+                const dx = cx - lastMouse.x;
+                const dy = cy - lastMouse.y;
+                state.camera.x += dx;
+                state.camera.y += dy;
+                lastMouse = { x: cx, y: cy };
+                return;
+            }
+
+            const gridPos = screenToIso(cx, cy);
+            hoveredTile = gridPos;
+        } 
+        else if (type === 'down') {
+            // Check if UI click (rudimentary check, mostly handled by DOM events)
+            const rect = canvas.getBoundingClientRect();
+            const cx = (e.touches ? e.touches[0].clientX : e.clientX);
+            const cy = (e.touches ? e.touches[0].clientY : e.clientY);
+            
+            // Start Drag
+            isDragging = true;
+            lastMouse = { x: cx, y: cy };
+        }
+        else if (type === 'up') {
+            isDragging = false;
+        }
+        else if (type === 'click') {
+            // Place building
+            if (hoveredTile.x >= 0 && hoveredTile.x < MAP_SIZE && hoveredTile.y >= 0 && hoveredTile.y < MAP_SIZE) {
+                interact(hoveredTile.x, hoveredTile.y);
+            }
+        }
+    }
+
+    function interact(x, y) {
+        if (!selectedTool) return;
+        
+        const cell = state.grid[x][y];
+
+        if (selectedTool === 'DELETE') {
+            if (cell) {
+                state.grid[x][y] = null;
+                playSound('demolish');
+                createFloatingText(x, y, "+₹50", '#4ade80');
+                state.money += 50;
+                updateUI();
+            }
             return;
         }
 
-        const assetType = ASSET_TYPES[gameState.currentAsset];
-        const canPlace = checkCanPlace(gridX, gridY, assetType.size);
-        
-        ctx.fillStyle = canPlace ? 'rgba(34, 197, 94, 0.5)' : 'rgba(239, 68, 68, 0.5)';
-        ctx.fillRect(gridX * TILE_SIZE, gridY * TILE_SIZE, TILE_SIZE * assetType.size, TILE_SIZE * assetType.size);
-        
-        // Dotted Outline
-        ctx.strokeStyle = canPlace ? '#fff' : '#ef4444';
-        ctx.setLineDash([5, 5]);
-        ctx.strokeRect(gridX * TILE_SIZE, gridY * TILE_SIZE, TILE_SIZE * assetType.size, TILE_SIZE * assetType.size);
-        ctx.setLineDash([]);
-    }
+        const buildInfo = BUILDINGS[selectedTool];
+        if (!buildInfo) return;
 
-    // ** Metrics & Turns **
-    function updateMetrics() {
-        const currentGrid = getCurrentGrid();
-        let stats = { pop: 0, pCap: 0, pDem: 0, wCap: 0, wDem: 0, happy: 0 };
-        
-        for (let x = 0; x < GRID_SIZE; x++) {
-            for (let y = 0; y < GRID_SIZE; y++) {
-                const tile = currentGrid[x][y];
-                if (tile && tile.type !== 'BLOCKED') {
-                    const a = Object.values(ASSET_TYPES).find(at => at.name === tile.type);
-                    if (a) {
-                        stats.pop += a.pop;
-                        stats.happy += a.happiness;
-                        if (a.power < 0) stats.pDem += Math.abs(a.power); else stats.pCap += a.power;
-                        if (a.water < 0) stats.wDem += Math.abs(a.water); else stats.wCap += a.water;
-                    }
-                }
-            }
+        if (cell) {
+            showMessage("Space occupied!", "text-red-400");
+            return;
         }
-        
-        gameState.population = stats.pop;
-        gameState.powerCapacity = stats.pCap;
-        gameState.powerDemand = stats.pDem;
-        gameState.waterCapacity = stats.wCap;
-        gameState.waterDemand = stats.wDem;
-        gameState.totalHappiness = Math.max(0, Math.min(100, 50 + stats.happy * 0.5));
 
-        document.getElementById('money_val').textContent = gameState.money.toLocaleString('en-IN');
-        document.getElementById('pop_val').textContent = gameState.population.toLocaleString();
-        document.getElementById('power_val').textContent = gameState.powerDemand;
-        document.getElementById('power_cap_val').textContent = gameState.powerCapacity;
-        document.getElementById('water_val').textContent = gameState.waterDemand;
-        document.getElementById('water_cap_val').textContent = gameState.waterCapacity;
-        document.getElementById('happiness_val').textContent = Math.floor(gameState.totalHappiness);
-        document.getElementById('turn_val').textContent = gameState.turn;
-    }
-
-    async function endTurn() {
-        if (!customGameId) { showMessage('Please login first!', 'bg-red-100 text-red-700'); return; }
-
-        let income = gameState.population * 1;
-        
-        // Happiness Penalties/Bonuses
-        if (gameState.powerCapacity < gameState.powerDemand) gameState.totalHappiness -= 10;
-        if (gameState.waterCapacity < gameState.waterDemand) gameState.totalHappiness -= 10;
-        
-        // Income Modifier based on Happiness
-        if (gameState.totalHappiness > 80) income *= 1.5;
-        else if (gameState.totalHappiness < 30) income *= 0.5;
-
-        // Running Costs
-        const currentGrid = getCurrentGrid();
-        let expenses = 0;
-        // Simplified expense calc logic if needed, currently based on negative revenue in assets
-        
-        gameState.money += Math.floor(income);
-        gameState.turn++;
-        
-        // Population Growth Logic
-        if (gameState.totalHappiness > 70) gameState.population = Math.floor(gameState.population * 1.05);
-        
-        showMessage(`Turn Ended. Income: ₹${Math.floor(income)}`, 'bg-indigo-100 text-indigo-700');
-        updateMetrics();
-        drawGrid();
-        await saveGame();
-    }
-
-    // ** UI Functions **
-    function setupControls() {
-        const controlsDiv = document.getElementById('controls');
-        controlsDiv.innerHTML = '';
-        Object.keys(ASSET_TYPES).forEach(key => {
-            const asset = ASSET_TYPES[key];
-            const btn = document.createElement('button');
-            btn.className = `asset-button bg-white hover:bg-gray-50 text-gray-800 text-xs flex flex-col items-center justify-center gap-1`;
-            btn.id = `btn_${key}`;
-            btn.innerHTML = `<span class="text-xl">${asset.text}</span><span>${asset.name}</span><span class="text-gray-400 font-mono">₹${asset.cost}</span>`;
-            btn.onclick = () => selectAsset(key);
-            controlsDiv.appendChild(btn);
-        });
-        
-        // Delete Button
-        const delBtn = document.createElement('button');
-        delBtn.className = `asset-button bg-red-50 hover:bg-red-100 text-red-600 font-bold border-red-200`;
-        delBtn.innerHTML = `🗑️ Demolish`;
-        delBtn.onclick = () => selectAsset('DELETE');
-        controlsDiv.appendChild(delBtn);
-    }
-
-    function selectAsset(key) {
-        if (gameState.currentAsset) document.getElementById(gameState.currentAsset === 'DELETE' ? '' : `btn_${gameState.currentAsset}`)?.classList.remove('active-asset');
-        gameState.currentAsset = key;
-        if (key !== 'DELETE') document.getElementById(`btn_${key}`).classList.add('active-asset');
-        drawGrid(); // Clear preview
-    }
-
-    function showMessage(text, className) {
-        const msg = document.getElementById('message');
-        msg.textContent = text;
-        msg.className = `message-box ${className}`;
-        msg.classList.remove('hidden');
-        clearTimeout(gameState.messageTimer);
-        gameState.messageTimer = setTimeout(() => msg.classList.add('hidden'), 3000);
-    }
-
-    // ** Inputs **
-    canvas.addEventListener('mousemove', (e) => {
-        if (!isGameActive) return;
-        const rect = canvas.getBoundingClientRect();
-        // Scale coordinate based on displayed size vs internal size
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        
-        const x = (e.clientX - rect.left) * scaleX;
-        const y = (e.clientY - rect.top) * scaleY;
-        
-        const gridX = Math.floor(x / TILE_SIZE);
-        const gridY = Math.floor(y / TILE_SIZE);
-
-        // OPTIMIZATION: Only redraw if grid cell changed
-        if (gridX !== lastGridX || gridY !== lastGridY) {
-            lastGridX = gridX;
-            lastGridY = gridY;
-            drawPreview(gridX, gridY);
-        }
-    });
-
-    canvas.addEventListener('mouseleave', () => {
-        lastGridX = -1; 
-        drawGrid();
-    });
-
-    canvas.addEventListener('click', async () => {
-        if (!isGameActive || lastGridX < 0) return;
-        const x = lastGridX;
-        const y = lastGridY;
-
-        if (gameState.currentAsset === 'DELETE') {
-            const currentGrid = getCurrentGrid();
-            if (currentGrid[x][y]) {
-                const t = currentGrid[x][y];
-                // Handle deleting multi-tile assets
-                let originX = t.type === 'BLOCKED' ? t.parentX : x;
-                let originY = t.type === 'BLOCKED' ? t.parentY : y;
-                const originTile = currentGrid[originX][originY];
-                
-                if(originTile && originTile.type !== 'BLOCKED') {
-                   const asset = Object.values(ASSET_TYPES).find(a => a.name === originTile.type);
-                   if(asset) {
-                       for(let i=0; i<asset.size; i++) {
-                           for(let j=0; j<asset.size; j++) {
-                               currentGrid[originX+i][originY+j] = null;
-                           }
-                       }
-                       gameState.money += asset.cost * 0.5; // 50% refund
-                       updateMetrics();
-                       drawGrid();
-                       await saveGame();
-                   }
-                }
-            }
-        } else if (gameState.currentAsset) {
-            const asset = ASSET_TYPES[gameState.currentAsset];
-            if (checkCanPlace(x, y, asset.size)) {
-                if (gameState.money >= asset.cost) await placeAsset(x, y, asset);
-                else showMessage('Not enough funds!', 'bg-red-100 text-red-700');
-            } else showMessage('Cannot build here!', 'bg-red-100 text-red-700');
-        }
-    });
-
-    // ** Expose to Window **
-    window.changeMap = changeMap;
-    window.unlockMap = unlockMap;
-    window.closeMapSelectModal = () => document.getElementById('mapSelectModal').classList.add('hidden');
-    window.closeInstructionsModal = () => document.getElementById('instructionsModal').classList.add('hidden');
-
-    // ** Init **
-    document.getElementById('loginButton').onclick = async () => {
-        const id = document.getElementById('loginId').value;
-        if(id.length < 3) return showMessage('ID too short', 'bg-red-100');
-        customGameId = id;
-        document.getElementById('loginMessage').textContent = 'Loading...';
-        document.getElementById('loginMessage').classList.remove('hidden');
-        if(await loadGame(id)) {
-            document.getElementById('loginModal').style.display = 'none';
-            document.getElementById('mainGameContainer').style.display = 'flex';
-            isGameActive = true;
-            document.getElementById('userIdDisplay').textContent = id;
-            setupControls();
-            resizeCanvas();
+        if (state.money >= buildInfo.cost) {
+            state.money -= buildInfo.cost;
+            state.grid[x][y] = { type: selectedTool };
+            createFloatingText(x, y, `-₹${buildInfo.cost}`, '#f87171');
+            playSound('build');
+            updateUI();
+            saveGame();
         } else {
-             showMessage('No save found. Try New Game.', 'bg-yellow-100');
+            showMessage("Not enough funds!", "text-red-400");
         }
-    };
+    }
 
-    document.getElementById('newUserButton').onclick = async () => {
-        const id = document.getElementById('loginId').value;
-        if(id.length < 3) return showMessage('ID too short', 'bg-red-100');
-        customGameId = id;
-        gameState = { ...DEFAULT_STATE };
-        allGrids = Array.from({ length: TOTAL_MAPS }, createEmptyGrid);
+    function nextTurn() {
+        let income = 0;
+        let expenses = 0;
+        let totalPop = 0;
+        let happyMod = 0;
+
+        // Iterate grid for simulation
+        let houses = 0;
+        let jobs = 0;
+
+        for (let x = 0; x < MAP_SIZE; x++) {
+            for (let y = 0; y < MAP_SIZE; y++) {
+                const cell = state.grid[x][y];
+                if (!cell) continue;
+                
+                const b = BUILDINGS[cell.type];
+                if (!b) continue;
+
+                if (b.type === 'res') {
+                    houses++;
+                    totalPop += b.pop;
+                    income += b.income; // Tax
+                } else if (b.type === 'ind' || b.type === 'com') {
+                    jobs += 10;
+                    income += b.income;
+                }
+                
+                if (b.happy) happyMod += b.happy;
+            }
+        }
+
+        // Sim Logic
+        state.pop = totalPop;
+        state.happiness = Math.min(100, Math.max(0, 50 + happyMod));
         
-        await saveGame();
-        document.getElementById('loginModal').style.display = 'none';
-        document.getElementById('mainGameContainer').style.display = 'flex';
-        isGameActive = true;
-        document.getElementById('userIdDisplay').textContent = id;
-        setupControls();
-        resizeCanvas();
-        updateMetrics();
+        // Happiness affects income
+        const taxRate = state.happiness / 100;
+        const netIncome = Math.floor(income * taxRate);
+        
+        state.money += netIncome;
+        state.turn++;
+        
+        createFloatingText(MAP_SIZE/2, MAP_SIZE/2, `Week ${state.turn}: +₹${netIncome}`, '#fbbf24');
+        updateUI();
+        saveGame();
+    }
+
+    // --- UI HELPERS ---
+    
+    function updateUI() {
+        document.getElementById('ui-money').innerText = state.money.toLocaleString();
+        document.getElementById('ui-pop').innerText = state.pop;
+        document.getElementById('ui-happy').innerText = Math.floor(state.happiness);
+        document.getElementById('ui-day').innerText = state.turn;
+    }
+
+    function showMessage(msg, colorClass) {
+        const el = document.getElementById('game-message');
+        el.innerText = msg;
+        el.className = `text-center font-bold text-lg drop-shadow-md transition-opacity duration-500 ${colorClass}`;
+        el.style.opacity = 1;
+        setTimeout(() => el.style.opacity = 0, 2000);
+    }
+
+    function createFloatingText(gx, gy, text, color) {
+        const pos = isoToScreen(gx, gy);
+        const div = document.createElement('div');
+        div.className = 'floater text-xl';
+        div.innerText = text;
+        div.style.color = color;
+        div.style.left = (pos.x + canvas.offsetLeft) + 'px';
+        div.style.top = (pos.y + canvas.offsetTop - 40) + 'px'; // -40 to appear above tile
+        document.body.appendChild(div);
+        setTimeout(() => div.remove(), 1500);
+    }
+
+    // --- SETUP & LOOP ---
+
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        // Re-center camera if needed or keep relative?
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // DOM Wiring
+    document.getElementById('btnLogin').onclick = () => {
+        const val = document.getElementById('loginId').value;
+        if(val.length > 2) initGame(val, false);
+    };
+    document.getElementById('btnNew').onclick = () => {
+        const val = document.getElementById('loginId').value;
+        if(val.length > 2) initGame(val, true);
     };
 
-    document.getElementById('endTurnButton').addEventListener('click', endTurn);
-    document.getElementById('samjhoButton').addEventListener('click', async () => {
-        if(!customGameId) return;
-        gameState.money += 50000;
-        gameState.totalHappiness = 100;
-        updateMetrics();
-        await saveGame();
-        showMessage('CHEAT APPLIED: Rich & Happy!', 'bg-purple-100 text-purple-700');
-    });
-    document.getElementById('instructionsButton').addEventListener('click', () => document.getElementById('instructionsModal').classList.remove('hidden'));
-    document.getElementById('openMapSelectModalButton').addEventListener('click', openMapSelectModal);
+    document.getElementById('btn-night').onclick = () => {
+        state.isNight = !state.isNight;
+    };
+    
+    document.getElementById('btn-next-turn').onclick = nextTurn;
 
-    window.onload = initFirebase;
+    // Generate Building Buttons
+    const list = document.getElementById('building-list');
+    Object.keys(BUILDINGS).forEach(key => {
+        const b = BUILDINGS[key];
+        const btn = document.createElement('button');
+        btn.className = `btn-3d min-w-[70px] h-[60px] rounded-xl bg-gray-700 hover:bg-gray-600 flex flex-col items-center justify-center p-1`;
+        btn.innerHTML = `
+            <div class="w-4 h-4 rounded-sm mb-1" style="background:${b.color}"></div>
+            <span class="text-[10px] uppercase font-bold text-gray-300">${b.name}</span>
+            <span class="text-[10px] text-green-400">₹${b.cost}</span>
+        `;
+        btn.onclick = () => {
+            selectedTool = key;
+            // Visual feedback on button selection could go here
+            document.querySelectorAll('#building-list button').forEach(b => b.classList.remove('border-white', 'border-2'));
+            btn.classList.add('border-white', 'border-2');
+        };
+        list.appendChild(btn);
+    });
+
+    // Inputs
+    canvas.addEventListener('mousemove', e => handleInput('move', e));
+    canvas.addEventListener('mousedown', e => handleInput('down', e));
+    canvas.addEventListener('mouseup', e => handleInput('up', e));
+    canvas.addEventListener('click', e => {
+        if(!isDragging) handleInput('click', e);
+    });
+    
+    // Touch
+    canvas.addEventListener('touchmove', e => { e.preventDefault(); handleInput('move', e); }, {passive: false});
+    canvas.addEventListener('touchstart', e => { handleInput('down', e); }, {passive: false});
+    canvas.addEventListener('touchend', e => { handleInput('up', e); if(!isDragging) handleInput('click', e); });
+
+    // Loop
+    function startGameLoop() {
+        const loop = () => {
+            draw();
+            requestAnimationFrame(loop);
+        };
+        loop();
+    }
+    
+    // Save/Load Logic (Simplified LocalStorage fallback)
+    async function saveGame() {
+        const data = JSON.stringify(state);
+        localStorage.setItem('city3d_'+gameId, data);
+        if(hasCloud && user) {
+            // Firestore save logic here if needed
+        }
+    }
+    
+    function loadState() {
+        const data = localStorage.getItem('city3d_'+gameId);
+        if(data) {
+            const parsed = JSON.parse(data);
+            state = { ...state, ...parsed };
+            // Ensure camera reset doesn't break
+            if(!state.camera) state.camera = { x: window.innerWidth/2, y: 100 };
+        }
+    }
+    
+    // Sound FX placeholder
+    function playSound(type) {
+        // Real implementation would use Audio()
+    }
 
 </script>
 </body>
